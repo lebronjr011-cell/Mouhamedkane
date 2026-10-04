@@ -5,102 +5,114 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nova</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#16181c">
+<meta name="theme-color" content="#16181c" id="meta-theme-color">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --fond: #16181c;
-    --panneau: #1e2127;
-    --bulle-moi: #3a5a78;
-    --bulle-ia: #262a32;
-    --texte: #e8e8e6;
-    --texte-att: #8b8f98;
-    --accent: #e8a33d;
-    --erreur: #d4654a;
+    --fond: #11131a;
+    --panneau: #191c25;
+    --bulle-moi: #39507a;
+    --bulle-ia: #232733;
+    --texte: #eceaf0;
+    --texte-att: #8d90a3;
+    --accent: #f0a944;
+    --accent-eclat: #ffd98a;
+    --erreur: #e0725a;
+    --code-fond: #0c0e14;
+    --bordure: #2c3040;
+    --police-titre: 'Space Grotesk', -apple-system, sans-serif;
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   :root[data-theme="clair"] {
-    --fond: #f4f4f2;
+    --fond: #f7f5f1;
     --panneau: #ffffff;
-    --bulle-moi: #4a7098;
-    --bulle-ia: #e7e7e4;
-    --texte: #1c1e22;
-    --texte-att: #6a6e78;
+    --bulle-moi: #4a6f9e;
+    --bulle-ia: #ece9e2;
+    --texte: #201f2b;
+    --texte-att: #726f82;
+    --code-fond: #ece9e2;
+    --bordure: #e2ddd2;
   }
   * { box-sizing: border-box; }
   html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
   body {
-    height: 100%;
-    margin: 0;
-    background: var(--fond);
-    color: var(--texte);
+    height: 100%; margin: 0; background: var(--fond); color: var(--texte);
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-    display: flex;
-    flex-direction: column;
-    transition: background 0.2s, color 0.2s;
+    display: flex; flex-direction: column; transition: background 0.2s, color 0.2s;
   }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   header {
-    padding: 12px 16px;
-    padding-top: calc(12px + env(safe-area-inset-top, 0px));
-    background: var(--panneau);
-    border-bottom: 1px solid #2c303840;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    padding: 13px 16px; padding-top: calc(13px + env(safe-area-inset-top, 0px));
+    background: var(--panneau); border-bottom: 1px solid var(--bordure);
+    display: flex; align-items: center; gap: 12px;
   }
   .avatar {
-    width: 34px; height: 34px; border-radius: 50%;
-    background: var(--accent); color: #1a1a1a;
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    background: radial-gradient(circle at 32% 28%, var(--accent-eclat), var(--accent) 65%);
+    color: #1a1308;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 15px; flex-shrink: 0;
+    font-family: var(--police-titre); font-weight: 700; font-size: 15px;
+    box-shadow: 0 0 0 1px var(--bordure), 0 2px 10px -2px color-mix(in srgb, var(--accent) 55%, transparent);
   }
   .entete-textes { flex: 1; min-width: 0; }
-  header h1 { font-size: 16px; font-weight: 600; margin: 0; letter-spacing: 0.2px; }
-  header .statut { font-size: 11px; color: var(--texte-att); }
-  header .icone-bouton { background: none; border: none; color: var(--texte-att); font-size: 18px; padding: 6px 8px; }
+  header h1 { font-family: var(--police-titre); font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.1px; }
+  header .statut { font-size: 11px; color: var(--texte-att); display: flex; align-items: center; gap: 5px; }
+  header .statut::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px 1px var(--accent); }
+  header .icone-bouton { background: none; border: none; color: var(--texte-att); font-size: 19px; padding: 6px 8px; border-radius: 8px; }
+  header .icone-bouton:active { background: color-mix(in srgb, var(--texte-att) 15%, transparent); }
 
   #menu-options {
-    position: fixed;
-    top: calc(58px + env(safe-area-inset-top, 0px));
-    right: 10px;
-    background: var(--panneau);
-    border: 1px solid #33384240;
-    border-radius: 12px;
-    overflow: hidden;
-    z-index: 20;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    position: fixed; top: calc(60px + env(safe-area-inset-top, 0px)); right: 10px;
+    background: var(--panneau); border: 1px solid var(--bordure); border-radius: 14px;
+    overflow: hidden; z-index: 20; box-shadow: 0 10px 28px rgba(0,0,0,0.35);
   }
   #menu-options button {
-    display: block; width: 100%; text-align: left;
-    padding: 12px 16px; background: none; border: none;
-    color: var(--texte); font-size: 14px; white-space: nowrap;
+    display: block; width: 100%; text-align: left; padding: 13px 17px;
+    background: none; border: none; color: var(--texte); font-size: 14px; white-space: nowrap;
   }
-  #menu-options button:active { background: #80808022; }
+  #menu-options button:active { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 
-  #fil { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  #fil { flex: 1; overflow-y: auto; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; }
   .msg {
-    max-width: 82%; padding: 10px 14px; border-radius: 14px;
-    line-height: 1.45; font-size: 15px; white-space: pre-wrap; word-wrap: break-word;
-    animation: apparition 0.15s ease-out;
+    max-width: 82%; padding: 10px 14px; border-radius: 16px;
+    line-height: 1.55; font-size: 15px; word-wrap: break-word; animation: apparition 0.18s ease-out;
   }
-  @keyframes apparition { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-  .moi { align-self: flex-end; background: var(--bulle-moi); color: #fff; border-bottom-right-radius: 4px; }
-  .ia {
-    align-self: stretch;
-    max-width: 100%;
-    background: none;
-    padding: 4px 2px;
-    border-radius: 0;
+  @keyframes apparition { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  .moi { align-self: flex-end; background: var(--bulle-moi); color: #fff; border-bottom-right-radius: 5px; white-space: pre-wrap; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+  .bloc-ia { align-self: stretch; max-width: 100%; }
+  .ia { background: none; padding: 2px 2px; border-radius: 0; }
+  .ia p { margin: 0 0 9px; }
+  .ia p:last-child { margin-bottom: 0; }
+  .ia ul, .ia ol { margin: 7px 0; padding-left: 22px; }
+  .ia li { margin-bottom: 4px; }
+  .ia code { background: var(--code-fond); padding: 2px 6px; border-radius: 5px; font-size: 13px; font-family: "SF Mono", Menlo, monospace; }
+  .ia pre { background: var(--code-fond); border: 1px solid var(--bordure); padding: 11px 13px; border-radius: 10px; overflow-x: auto; margin: 9px 0; }
+  .ia pre code { background: none; padding: 0; border: none; }
+  .ia a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+  .ia strong { font-weight: 700; }
+  .bouton-copier {
+    background: none; border: none; color: var(--texte-att); font-size: 12px;
+    padding: 3px 7px; margin-top: 3px; cursor: pointer; border-radius: 6px;
   }
+  .bouton-copier:active { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
   .erreur { align-self: center; color: var(--erreur); font-size: 13px; text-align: center; }
-  .vide { margin: auto; text-align: center; color: var(--texte-att); font-size: 14px; padding: 0 30px; }
-  .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; padding: 0 10px; }
-  .suggestion { background: var(--panneau); border: 1px solid #33384280; color: var(--texte); padding: 9px 14px; border-radius: 16px; font-size: 13px; }
-  .suggestion:active { background: var(--accent); color: #1a1a1a; }
+  .vide { margin: auto; text-align: center; color: var(--texte-att); font-size: 14px; padding: 0 24px; }
+  .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px; padding: 0 6px; }
+  .suggestion {
+    background: var(--panneau); border: 1px solid var(--bordure); color: var(--texte);
+    padding: 9px 15px; border-radius: 18px; font-size: 13px;
+  }
+  .suggestion:active { background: var(--accent); color: #1a1308; border-color: var(--accent); }
 
   .points-attente { display: inline-flex; gap: 4px; padding: 4px 0; }
   .points-attente span { width: 6px; height: 6px; border-radius: 50%; background: var(--texte-att); animation: rebond 1.2s infinite ease-in-out; }
@@ -109,21 +121,32 @@
   @keyframes rebond { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
 
   form {
-    display: flex; gap: 8px; padding: 10px 12px;
+    display: flex; align-items: flex-end; gap: 6px; padding: 10px 12px;
     padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-    background: var(--panneau); border-top: 1px solid #2c303840;
+    background: var(--panneau); border-top: 1px solid var(--bordure);
   }
   textarea {
-    flex: 1; resize: none; background: var(--fond); border: 1px solid #33384280;
-    border-radius: 18px; color: var(--texte); padding: 10px 14px;
+    flex: 1; resize: none; background: var(--fond); border: 1px solid var(--bordure);
+    border-radius: 20px; color: var(--texte); padding: 11px 15px;
     font-size: 15px; font-family: inherit; max-height: 100px;
   }
-  textarea:focus { outline: 2px solid var(--accent); }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   button.envoyer {
-    background: var(--accent); color: #1a1a1a; border: none; border-radius: 50%;
-    width: 42px; height: 42px; font-size: 18px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent-eclat), var(--accent));
+    color: #1a1308; border: none; border-radius: 50%;
+    width: 42px; height: 42px; font-size: 18px; flex-shrink: 0; font-weight: 700;
   }
   button.envoyer:disabled { opacity: 0.4; }
+  button.joindre { background: none; border: none; color: var(--texte-att); font-size: 20px; width: 40px; height: 42px; flex-shrink: 0; }
+  #zone-apercu { padding: 0 12px; background: var(--panneau); }
+  .apercu-fichier {
+    display: inline-flex; align-items: center; gap: 8px; background: var(--fond);
+    border: 1px solid var(--bordure); border-radius: 10px; padding: 6px 10px; margin: 8px 0;
+    font-size: 13px; max-width: 100%;
+  }
+  .apercu-fichier img { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; }
+  .apercu-fichier .nom-fichier { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+  .apercu-fichier button { background: none; border: none; color: var(--texte-att); font-size: 16px; padding: 0 2px; }
 
   #config {
     position: fixed; inset: 0; background: var(--fond);
@@ -132,18 +155,24 @@
     overflow-y: auto;
   }
   #config .avatar-grand {
-    width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #1a1a1a;
-    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 24px; margin-bottom: 16px;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, var(--accent-eclat), var(--accent) 65%);
+    color: #1a1308; box-shadow: 0 4px 24px -4px color-mix(in srgb, var(--accent) 60%, transparent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--police-titre); font-weight: 700; font-size: 26px; margin-bottom: 18px;
   }
-  #config h2 { font-size: 20px; margin-bottom: 6px; }
-  #config p { color: var(--texte-att); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+  #config h2 { font-family: var(--police-titre); font-size: 22px; font-weight: 700; margin-bottom: 7px; }
+  #config p { color: var(--texte-att); font-size: 14px; line-height: 1.55; margin-bottom: 22px; }
+  #config label { font-size: 12px; color: var(--texte-att); display: block; margin-bottom: 6px; }
   #config input {
-    width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #33384280;
+    width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--bordure);
     background: var(--panneau); color: var(--texte); font-size: 15px; margin-bottom: 14px;
   }
+  #config input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   #config button {
-    width: 100%; padding: 12px; border-radius: 10px; border: none;
-    background: var(--accent); color: #1a1a1a; font-weight: 600; font-size: 15px;
+    width: 100%; padding: 13px; border-radius: 12px; border: none;
+    background: linear-gradient(135deg, var(--accent-eclat), var(--accent));
+    color: #1a1308; font-weight: 700; font-size: 15px;
   }
   #config a { color: var(--accent); }
   .hidden { display: none !important; }
@@ -157,8 +186,14 @@
   <p>Colle ta clé API <strong>Groq</strong> (gratuite, sans carte bancaire). Obtiens-la sur
      <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a> → "Create API Key".
      Elle reste uniquement sur ton téléphone, jamais envoyée ailleurs.</p>
-  <input id="champ-nom" type="text" value="Nova" placeholder="Nom de ton assistant">
-  <input id="champ-cle" type="password" placeholder="gsk_...">
+  <label for="champ-nom">Nom de ton assistant</label>
+  <input id="champ-nom" type="text" value="Nova" placeholder="Nom de ton assistant" aria-label="Nom de ton assistant">
+  <label for="champ-cle">Clé API Groq</label>
+  <input id="champ-cle" type="password" placeholder="gsk_..." aria-label="Clé API Groq">
+  <label for="champ-firebase">Config Firebase (optionnel — pour que Nova se souvienne de toi et garde tes notes, sur tous tes appareils)</label>
+  <input id="champ-firebase" type="text" placeholder="Colle ici le code de config Firebase" aria-label="Config Firebase">
+  <label for="champ-code-perso">Ton code personnel (laisse vide la première fois ; sur un nouvel appareil, entre le code déjà obtenu pour retrouver tes données)</label>
+  <input id="champ-code-perso" type="text" placeholder="Ex: A1B2C3 (optionnel)" aria-label="Code personnel">
   <button onclick="enregistrerCle()">Commencer</button>
 </div>
 
@@ -168,73 +203,68 @@
     <h1 id="titre-entete">Nova</h1>
     <div class="statut">En ligne</div>
   </div>
-  <button class="icone-bouton" onclick="basculerMenu()">⋮</button>
+  <button class="icone-bouton" onclick="basculerMenu()" aria-label="Menu des options" aria-haspopup="true">⋮</button>
 </header>
 
-<div id="menu-options" class="hidden">
+<div id="menu-options" class="hidden" role="menu">
   <button onclick="nouvelleConversation()">🗨️ Nouvelle conversation</button>
   <button onclick="basculerTheme()">🌓 Changer de thème</button>
   <button onclick="reinitialiser()">🔑 Changer de clé</button>
+  <button onclick="voirCodePersonnel()" id="bouton-code" class="hidden">🔗 Mon code de synchro</button>
 </div>
 
-<div id="fil" class="hidden"></div>
+<div id="fil" class="hidden" aria-live="polite"></div>
 
+<div id="zone-apercu" class="hidden"></div>
 <form class="hidden" id="formulaire" onsubmit="return envoyer(event)">
-  <textarea id="champ-message" rows="1" placeholder="Écris un message…"></textarea>
-  <button class="envoyer" type="submit">↑</button>
+  <button type="button" class="joindre" onclick="document.getElementById('champ-fichier').click()" aria-label="Joindre un fichier">📎</button>
+  <input type="file" id="champ-fichier" accept="image/*,.txt,.md,.csv,.json" class="hidden" onchange="fichierChoisi(event)">
+  <textarea id="champ-message" rows="1" placeholder="Écris un message…" aria-label="Ton message"></textarea>
+  <button class="envoyer" type="submit" id="bouton-envoyer" aria-label="Envoyer">↑</button>
 </form>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
-let MODEL = localStorage.getItem("modele_groq") || "";
 const URL_API = "https://api.groq.com/openai/v1/chat/completions";
 const URL_MODELES = "https://api.groq.com/openai/v1/models";
 
-// Préférences de modèle, du meilleur au plus basique (on prend le premier disponible)
-const MODELES_PREFERES = [
-  "llama-3.3-70b-versatile",
-  "llama-3.1-70b-versatile",
-  "openai/gpt-oss-120b",
-  "openai/gpt-oss-20b",
-  "llama-3.1-8b-instant",
-  "mixtral-8x7b-32768"
-];
-const MOTS_EXCLUS = ["whisper", "tts", "guard", "moderation", "allam"];
-
-async function detecterModele() {
+function chargerJSON(cle, defaut) {
   try {
-    const reponse = await fetch(URL_MODELES, { headers: { "Authorization": "Bearer " + cleAPI } });
-    const donnees = await reponse.json();
-    const idsDisponibles = (donnees.data || []).map(m => m.id);
-    for (const prefere of MODELES_PREFERES) {
-      if (idsDisponibles.includes(prefere)) return prefere;
-    }
-    const candidat = idsDisponibles.find(id => !MOTS_EXCLUS.some(mot => id.toLowerCase().includes(mot)));
-    return candidat || MODELES_PREFERES[0];
-  } catch (e) {
-    return MODELES_PREFERES[0];
-  }
+    const brut = localStorage.getItem(cle);
+    if (!brut) return defaut;
+    const valeur = JSON.parse(brut);
+    return valeur ?? defaut;
+  } catch (e) { return defaut; }
 }
 
-let historique = JSON.parse(localStorage.getItem("historique_nova_groq") || "[]"); // format OpenAI: {role, content, ...}
+let historique = chargerJSON("historique_nova_groq", []);
 let cleAPI = localStorage.getItem("cle_groq") || "";
 let nomAssistant = localStorage.getItem("nom_assistant") || "Nova";
-let rappels = JSON.parse(localStorage.getItem("rappels_nova") || "[]");
+let rappels = chargerJSON("rappels_nova", []);
+let enAttenteReponse = false;
 
 const config = document.getElementById("config");
 const entete = document.getElementById("entete");
 const fil = document.getElementById("fil");
 const formulaire = document.getElementById("formulaire");
 const champMessage = document.getElementById("champ-message");
+const boutonEnvoyer = document.getElementById("bouton-envoyer");
 const menuOptions = document.getElementById("menu-options");
+const metaThemeColor = document.getElementById("meta-theme-color");
 
-// ---------- Thème ----------
+// ---------- Thème (suit le système au premier lancement) ----------
 function appliquerTheme() {
-  const theme = localStorage.getItem("theme_nova") || "sombre";
+  let theme = localStorage.getItem("theme_nova");
+  if (!theme) {
+    theme = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "sombre" : "clair";
+  }
   document.documentElement.setAttribute("data-theme", theme === "clair" ? "clair" : "sombre");
+  metaThemeColor.setAttribute("content", theme === "clair" ? "#f4f4f2" : "#16181c");
 }
 function basculerTheme() {
   basculerMenu();
-  const actuel = localStorage.getItem("theme_nova") || "sombre";
+  const actuel = document.documentElement.getAttribute("data-theme") === "clair" ? "clair" : "sombre";
   const nouveau = actuel === "clair" ? "sombre" : "clair";
   try { localStorage.setItem("theme_nova", nouveau); } catch (e) {}
   appliquerTheme();
@@ -243,11 +273,141 @@ appliquerTheme();
 
 function vibrer(duree) { try { if (navigator.vibrate) navigator.vibrate(duree); } catch (e) {} }
 
+// ---------- Base de données (Firebase, optionnelle) ----------
+let dbFirestore = null;
+let codePersonnel = localStorage.getItem("code_nova") || "";
+let memoireNova = "";
+
+function genererCode() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+function initFirebase() {
+  const configBrute = localStorage.getItem("firebase_config_nova");
+  if (!configBrute) return false;
+  try {
+    const firebaseConfig = JSON.parse(configBrute);
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    dbFirestore = firebase.firestore();
+    if (!codePersonnel) {
+      codePersonnel = genererCode();
+      try { localStorage.setItem("code_nova", codePersonnel); } catch (e) {}
+    }
+    return true;
+  } catch (e) {
+    console.error("Erreur Firebase :", e);
+    return false;
+  }
+}
+
+async function chargerMemoire() {
+  if (!dbFirestore) return;
+  try {
+    const doc = await dbFirestore.collection("nova_utilisateurs").doc(codePersonnel).get();
+    memoireNova = doc.exists ? (doc.data().memoire || "") : "";
+  } catch (e) { memoireNova = ""; }
+}
+
+async function memoriser(info) {
+  if (!dbFirestore) return "Base de données non connectée.";
+  memoireNova = memoireNova ? memoireNova + "\n- " + info : "- " + info;
+  try {
+    await dbFirestore.collection("nova_utilisateurs").doc(codePersonnel).set({ memoire: memoireNova }, { merge: true });
+    return "Noté, je m'en souviendrai.";
+  } catch (e) { return "Erreur lors de la sauvegarde."; }
+}
+
+async function ajouterNote(texte) {
+  if (!dbFirestore) return "Base de données non connectée.";
+  try {
+    await dbFirestore.collection("nova_utilisateurs").doc(codePersonnel)
+      .collection("notes").add({ texte, fait: false, cree: Date.now() });
+    return "Note ajoutée : " + texte;
+  } catch (e) { return "Erreur lors de l'ajout de la note."; }
+}
+
+async function listerNotes() {
+  if (!dbFirestore) return "Base de données non connectée.";
+  try {
+    const snap = await dbFirestore.collection("nova_utilisateurs").doc(codePersonnel)
+      .collection("notes").orderBy("cree", "desc").limit(30).get();
+    if (snap.empty) return "Aucune note enregistrée.";
+    return snap.docs.map(d => `- [${d.data().fait ? "fait" : "à faire"}] ${d.data().texte}`).join("\n");
+  } catch (e) { return "Erreur lors de la lecture des notes."; }
+}
+
+async function terminerNote(texteRecherche) {
+  if (!dbFirestore) return "Base de données non connectée.";
+  try {
+    const snap = await dbFirestore.collection("nova_utilisateurs").doc(codePersonnel).collection("notes").get();
+    const trouve = snap.docs.find(d => d.data().texte.toLowerCase().includes(texteRecherche.toLowerCase()));
+    if (!trouve) return "Note introuvable.";
+    await trouve.ref.update({ fait: true });
+    return "Marquée comme faite : " + trouve.data().texte;
+  } catch (e) { return "Erreur."; }
+}
+
+// ---------- Mise en forme simple du texte (markdown léger) ----------
+function echapperHTML(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function formaterTexte(texte) {
+  let s = echapperHTML(texte);
+  // blocs de code ```...```
+  s = s.replace(/```([\s\S]*?)```/g, (m, code) => `<pre><code>${code.trim()}</code></pre>`);
+  // code en ligne `...`
+  s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+  // gras **...**
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  // liens [texte](url)
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // listes à puces (lignes commençant par - ou *)
+  const lignes = s.split("\n");
+  let dansListe = false;
+  let sortie = [];
+  for (const ligne of lignes) {
+    const estPuce = /^\s*[-*]\s+/.test(ligne);
+    if (estPuce) {
+      if (!dansListe) { sortie.push("<ul>"); dansListe = true; }
+      sortie.push("<li>" + ligne.replace(/^\s*[-*]\s+/, "") + "</li>");
+    } else {
+      if (dansListe) { sortie.push("</ul>"); dansListe = false; }
+      if (ligne.trim()) sortie.push("<p>" + ligne + "</p>");
+    }
+  }
+  if (dansListe) sortie.push("</ul>");
+  return sortie.join("");
+}
+
+function copierTexte(bouton, texteOriginal) {
+  try {
+    navigator.clipboard.writeText(texteOriginal);
+    const ancien = bouton.textContent;
+    bouton.textContent = "Copié ✓";
+    setTimeout(() => { bouton.textContent = ancien; }, 1500);
+  } catch (e) {}
+}
+
+// ---------- Date et heure (pour que Nova les connaisse) ----------
+function dateHeureActuelle() {
+  const maintenant = new Date();
+  return maintenant.toLocaleString("fr-FR", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+    hour: "2-digit", minute: "2-digit"
+  });
+}
+
 // ---------- Outils ----------
-function calculer(expression) {
+function calculer(expressionBrute) {
+  let expr = String(expressionBrute)
+    .replace(/,/g, ".")
+    .replace(/×/g, "*")
+    .replace(/÷/g, "/")
+    .replace(/\^/g, "**");
+  expr = expr.replace(/(\d+(\.\d+)?)%/g, "($1/100)");
   const autorises = /^[0-9+\-*/(). ]+$/;
-  if (!autorises.test(expression)) return "Erreur : expression invalide.";
-  try { return String(Function('"use strict"; return (' + expression + ')')()); }
+  if (!autorises.test(expr)) return "Erreur : expression invalide.";
+  try { return String(Function('"use strict"; return (' + expr + ')')()); }
   catch (e) { return "Erreur de calcul."; }
 }
 
@@ -263,6 +423,19 @@ async function rechercheWeb(requete) {
   } catch (e) { return "Erreur de recherche web."; }
 }
 
+function texteMeteo(code) {
+  const table = {
+    0: "ciel dégagé", 1: "plutôt dégagé", 2: "partiellement nuageux", 3: "couvert",
+    45: "brouillard", 48: "brouillard givrant",
+    51: "bruine légère", 53: "bruine", 55: "bruine forte",
+    61: "pluie légère", 63: "pluie", 65: "pluie forte",
+    71: "neige légère", 73: "neige", 75: "neige forte",
+    80: "averses légères", 81: "averses", 82: "averses violentes",
+    95: "orage", 96: "orage avec grêle", 99: "orage violent avec grêle"
+  };
+  return table[code] || "conditions inconnues";
+}
+
 async function meteo(ville) {
   try {
     const geo = await fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(ville) + "&count=1&language=fr").then(r => r.json());
@@ -270,7 +443,7 @@ async function meteo(ville) {
     if (!lieu) return "Ville introuvable.";
     const donnees = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lieu.latitude}&longitude=${lieu.longitude}&current=temperature_2m,weather_code,wind_speed_10m`).then(r => r.json());
     const c = donnees.current;
-    return `${lieu.name}: ${c.temperature_2m}°C, vent ${c.wind_speed_10m} km/h.`;
+    return `${lieu.name}: ${c.temperature_2m}°C, ${texteMeteo(c.weather_code)}, vent ${c.wind_speed_10m} km/h.`;
   } catch (e) { return "Erreur météo."; }
 }
 
@@ -278,63 +451,124 @@ function ajouterRappel(texte, dansMinutes) {
   const echeance = Date.now() + Number(dansMinutes) * 60000;
   rappels.push({ texte, echeance, fait: false });
   try { localStorage.setItem("rappels_nova", JSON.stringify(rappels)); } catch (e) {}
+  if (window.Notification && Notification.permission === "default") {
+    Notification.requestPermission().catch(() => {});
+  }
   return `Rappel noté : "${texte}" dans ${dansMinutes} minute(s). (Nova doit rester ouverte en arrière-plan.)`;
 }
 
-setInterval(() => {
+function declencherRappel(r) {
+  r.fait = true;
+  vibrer([200, 100, 200]);
+  if (window.Notification && Notification.permission === "granted") {
+    try { new Notification(nomAssistant, { body: "⏰ " + r.texte, icon: "icon-192.png" }); } catch (e) {}
+  }
+  ajouterBulle("⏰ Rappel : " + r.texte, "ia");
+}
+
+function verifierRappels() {
   const maintenant = Date.now();
   let modifie = false;
   for (const r of rappels) {
-    if (!r.fait && r.echeance <= maintenant) {
-      r.fait = true; modifie = true;
-      vibrer([200, 100, 200]);
-      ajouterBulle("⏰ Rappel : " + r.texte, "ia");
-    }
+    if (!r.fait && r.echeance <= maintenant) { declencherRappel(r); modifie = true; }
   }
   if (modifie) { try { localStorage.setItem("rappels_nova", JSON.stringify(rappels)); } catch (e) {} }
-}, 15000);
+}
+setInterval(verifierRappels, 15000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) verifierRappels(); });
 
-// Format OpenAI/Groq pour les outils
-const OUTILS = [
-  {
-    type: "function",
-    function: {
-      name: "calculer",
-      description: "Calcule une expression mathématique, ex: '12 * (3 + 4)'.",
-      parameters: { type: "object", properties: { expression: { type: "string" } }, required: ["expression"] }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "rechercheWeb",
-      description: "Cherche une information récente ou factuelle sur le web.",
-      parameters: { type: "object", properties: { requete: { type: "string" } }, required: ["requete"] }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "meteo",
-      description: "Donne la météo actuelle d'une ville.",
-      parameters: { type: "object", properties: { ville: { type: "string" } }, required: ["ville"] }
-    }
-  },
-  {
-    type: "function",
-    function: {
-      name: "ajouterRappel",
-      description: "Programme un rappel pour dans X minutes, tant que l'app reste ouverte.",
-      parameters: { type: "object", properties: { texte: { type: "string" }, dansMinutes: { type: "number" } }, required: ["texte", "dansMinutes"] }
-    }
-  }
+// ---------- Modèle de texte (détection automatique) ----------
+let MODEL = localStorage.getItem("modele_groq") || "";
+const MODELES_PREFERES = [
+  "llama-3.3-70b-versatile", "llama-3.1-70b-versatile",
+  "openai/gpt-oss-120b", "openai/gpt-oss-20b",
+  "llama-3.1-8b-instant", "mixtral-8x7b-32768"
 ];
+const MOTS_EXCLUS = ["whisper", "tts", "guard", "moderation", "allam"];
+
+async function detecterModele() {
+  try {
+    const reponse = await fetch(URL_MODELES, { headers: { "Authorization": "Bearer " + cleAPI } });
+    const donnees = await reponse.json();
+    const idsDisponibles = (donnees.data || []).map(m => m.id);
+    for (const prefere of MODELES_PREFERES) if (idsDisponibles.includes(prefere)) return prefere;
+    const candidat = idsDisponibles.find(id => !MOTS_EXCLUS.some(mot => id.toLowerCase().includes(mot)));
+    return candidat || MODELES_PREFERES[0];
+  } catch (e) { return MODELES_PREFERES[0]; }
+}
+
+// ---------- Modèle de vision ----------
+let MODELE_VISION = localStorage.getItem("modele_vision_groq") || "";
+const MODELES_VISION_PREFERES = ["qwen/qwen3.6-27b", "llama-3.2-11b-vision-preview", "llama-3.2-90b-vision-preview"];
+
+async function detecterModeleVision() {
+  try {
+    const reponse = await fetch(URL_MODELES, { headers: { "Authorization": "Bearer " + cleAPI } });
+    const donnees = await reponse.json();
+    const idsDisponibles = (donnees.data || []).map(m => m.id);
+    for (const prefere of MODELES_VISION_PREFERES) if (idsDisponibles.includes(prefere)) return prefere;
+    const candidat = idsDisponibles.find(id => id.toLowerCase().includes("vision") || id.toLowerCase().includes("qwen"));
+    return candidat || MODELES_VISION_PREFERES[0];
+  } catch (e) { return MODELES_VISION_PREFERES[0]; }
+}
+
+// ---------- Fichier joint en attente ----------
+let fichierEnAttente = null;
+
+function fichierChoisi(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const zoneApercu = document.getElementById("zone-apercu");
+  if (f.size > 15 * 1024 * 1024) { alert("Fichier trop volumineux (max 15 Mo)."); e.target.value = ""; return; }
+
+  const lecteur = new FileReader();
+  if (f.type.startsWith("image/")) {
+    lecteur.onload = () => {
+      fichierEnAttente = { type: "image", nom: f.name, dataURL: lecteur.result };
+      zoneApercu.innerHTML = `<div class="apercu-fichier"><img src="${lecteur.result}" alt=""><span class="nom-fichier">${f.name}</span><button onclick="retirerFichier()" aria-label="Retirer le fichier">✕</button></div>`;
+      zoneApercu.classList.remove("hidden");
+    };
+    lecteur.readAsDataURL(f);
+  } else {
+    lecteur.onload = () => {
+      fichierEnAttente = { type: "texte", nom: f.name, contenu: lecteur.result.slice(0, 8000) };
+      zoneApercu.innerHTML = `<div class="apercu-fichier">📄<span class="nom-fichier">${f.name}</span><button onclick="retirerFichier()" aria-label="Retirer le fichier">✕</button></div>`;
+      zoneApercu.classList.remove("hidden");
+    };
+    lecteur.readAsText(f);
+  }
+  e.target.value = "";
+}
+function retirerFichier() {
+  fichierEnAttente = null;
+  const zoneApercu = document.getElementById("zone-apercu");
+  zoneApercu.innerHTML = "";
+  zoneApercu.classList.add("hidden");
+}
+
+const OUTILS_BASE = [
+  { type: "function", function: { name: "calculer", description: "Calcule une expression mathématique. Accepte × ÷ ^ % et la virgule décimale.", parameters: { type: "object", properties: { expression: { type: "string" } }, required: ["expression"] } } },
+  { type: "function", function: { name: "rechercheWeb", description: "Cherche une information récente ou factuelle sur le web.", parameters: { type: "object", properties: { requete: { type: "string" } }, required: ["requete"] } } },
+  { type: "function", function: { name: "meteo", description: "Donne la météo actuelle d'une ville (température ET conditions).", parameters: { type: "object", properties: { ville: { type: "string" } }, required: ["ville"] } } },
+  { type: "function", function: { name: "ajouterRappel", description: "Programme un rappel pour dans X minutes (l'app doit rester ouverte).", parameters: { type: "object", properties: { texte: { type: "string" }, dansMinutes: { type: "number" } }, required: ["texte", "dansMinutes"] } } }
+];
+const OUTILS_BDD = [
+  { type: "function", function: { name: "memoriser", description: "Retient une information durable sur l'utilisateur (préférence, habitude, fait important) pour s'en souvenir plus tard, même sur un autre appareil.", parameters: { type: "object", properties: { info: { type: "string" } }, required: ["info"] } } },
+  { type: "function", function: { name: "ajouterNote", description: "Ajoute une note ou une tâche à retenir pour l'utilisateur.", parameters: { type: "object", properties: { texte: { type: "string" } }, required: ["texte"] } } },
+  { type: "function", function: { name: "listerNotes", description: "Liste toutes les notes/tâches enregistrées.", parameters: { type: "object", properties: {} } } },
+  { type: "function", function: { name: "terminerNote", description: "Marque une note/tâche comme terminée, à partir d'un bout de son texte.", parameters: { type: "object", properties: { texteRecherche: { type: "string" } }, required: ["texteRecherche"] } } }
+];
+function outilsDisponibles() { return dbFirestore ? [...OUTILS_BASE, ...OUTILS_BDD] : OUTILS_BASE; }
 
 async function executerOutil(nom, args) {
   if (nom === "calculer") return calculer(args.expression);
   if (nom === "rechercheWeb") return await rechercheWeb(args.requete);
   if (nom === "meteo") return await meteo(args.ville);
   if (nom === "ajouterRappel") return ajouterRappel(args.texte, args.dansMinutes);
+  if (nom === "memoriser") return await memoriser(args.info);
+  if (nom === "ajouterNote") return await ajouterNote(args.texte);
+  if (nom === "listerNotes") return await listerNotes();
+  if (nom === "terminerNote") return await terminerNote(args.texteRecherche);
   return "Outil inconnu.";
 }
 
@@ -349,11 +583,46 @@ function demarrer() {
   reconstruireFil();
 }
 
+function construireBulleIA(texte) {
+  const conteneur = document.createElement("div");
+  conteneur.className = "bloc-ia";
+  const corps = document.createElement("div");
+  corps.className = "msg ia";
+  corps.innerHTML = formaterTexte(texte);
+  const bouton = document.createElement("button");
+  bouton.className = "bouton-copier";
+  bouton.textContent = "Copier";
+  bouton.onclick = () => copierTexte(bouton, texte);
+  conteneur.appendChild(corps);
+  conteneur.appendChild(bouton);
+  return conteneur;
+}
+
 function reconstruireFil() {
   fil.innerHTML = "";
-  const visibles = historique.filter(m => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content);
+  const visibles = historique.filter(m => m.role === "user" || m.role === "assistant");
   if (visibles.length === 0) { afficherVide(); return; }
-  for (const m of visibles) ajouterBulle(m.content, m.role === "user" ? "moi" : "ia");
+  for (const m of visibles) {
+    if (Array.isArray(m.content)) {
+      const img = m.content.find(p => p.type === "image_url");
+      const txt = m.content.find(p => p.type === "text")?.text || "";
+      if (img) {
+        const bulle = document.createElement("div");
+        bulle.className = "msg moi";
+        bulle.innerHTML = `<img src="${img.image_url.url}" alt="" style="max-width:100%;border-radius:10px;display:block;margin-bottom:${txt ? '6px' : '0'}">` + echapperHTML(txt);
+        fil.appendChild(bulle);
+      }
+    } else if (typeof m.content === "string" && m.content) {
+      if (m.role === "user") {
+        const bulle = document.createElement("div");
+        bulle.className = "msg moi";
+        bulle.textContent = m.content;
+        fil.appendChild(bulle);
+      } else {
+        fil.appendChild(construireBulleIA(m.content));
+      }
+    }
+  }
 }
 
 function afficherVide() {
@@ -367,7 +636,7 @@ function afficherVide() {
     <div class="vide">
       Pose ta première question pour commencer, ou essaie :
       <div class="suggestions">
-        ${suggestions.map(s => `<button class="suggestion" onclick="envoyerSuggestion(this)">${s}</button>`).join("")}
+        ${suggestions.map(s => `<button type="button" class="suggestion" onclick="envoyerSuggestion(this)">${s}</button>`).join("")}
       </div>
     </div>`;
 }
@@ -377,7 +646,12 @@ function envoyerSuggestion(bouton) {
 }
 
 function sauvegarderHistorique() {
-  try { localStorage.setItem("historique_nova_groq", JSON.stringify(historique.slice(-60))); } catch (e) {}
+  try {
+    let recent = historique.slice(-60);
+    // on s'assure que la sauvegarde commence par un message de l'utilisateur (jamais un résultat d'outil orphelin)
+    while (recent.length && recent[0].role !== "user") recent.shift();
+    localStorage.setItem("historique_nova_groq", JSON.stringify(recent));
+  } catch (e) {}
 }
 
 function nouvelleConversation() {
@@ -387,23 +661,36 @@ function nouvelleConversation() {
   afficherVide();
 }
 
-function basculerMenu() { menuOptions.classList.toggle("hidden"); }
+function voirCodePersonnel() {
+  basculerMenu();
+  alert("Ton code personnel : " + codePersonnel + "\n\nSaisis ce même code sur un autre appareil (champ Config Firebase) pour retrouver ta mémoire et tes notes.");
+}
+function basculerMenu() {
+  document.getElementById("bouton-code").classList.toggle("hidden", !dbFirestore);
+  menuOptions.classList.toggle("hidden");
+}
 document.addEventListener("click", (e) => {
   if (!menuOptions.classList.contains("hidden") && !e.target.closest("#entete") && !e.target.closest("#menu-options")) {
     menuOptions.classList.add("hidden");
   }
 });
 
-function enregistrerCle() {
+async function enregistrerCle() {
   const valeur = document.getElementById("champ-cle").value.trim();
   const nom = document.getElementById("champ-nom").value.trim() || "Nova";
+  const firebaseBrut = document.getElementById("champ-firebase").value.trim();
+  const codeSaisi = document.getElementById("champ-code-perso").value.trim().toUpperCase();
   if (!valeur) return;
   try {
     localStorage.setItem("cle_groq", valeur);
     localStorage.setItem("nom_assistant", nom);
+    if (firebaseBrut) localStorage.setItem("firebase_config_nova", firebaseBrut);
+    if (codeSaisi) localStorage.setItem("code_nova", codeSaisi);
   } catch (e) {}
   cleAPI = valeur;
   nomAssistant = nom;
+  if (codeSaisi) codePersonnel = codeSaisi;
+  if (initFirebase()) await chargerMemoire();
   demarrer();
 }
 
@@ -433,10 +720,16 @@ function ajouterIndicateurAttente() {
   if (vide) vide.remove();
   const bulle = document.createElement("div");
   bulle.className = "msg ia";
-  bulle.innerHTML = '<span class="points-attente"><span></span><span></span><span></span></span>';
+  bulle.innerHTML = '<span class="points-attente" role="status" aria-label="Nova réfléchit"><span></span><span></span><span></span></span>';
   fil.appendChild(bulle);
   fil.scrollTop = fil.scrollHeight;
   return bulle;
+}
+
+function remplacerIndicateurParReponse(bulleAttente, texte) {
+  const conteneur = construireBulleIA(texte);
+  bulleAttente.replaceWith(conteneur);
+  fil.scrollTop = fil.scrollHeight;
 }
 
 function normaliser(texte) {
@@ -451,17 +744,14 @@ function reponseIdentiteSiApplicable(texteOriginal) {
   const normalise = normaliser(texteOriginal);
   const avecPoint = normalise.endsWith("?");
   const sansPoint = normalise.replace(/\?$/, "").trim();
-
   const variantesCreateur = [
     "qui ta cree", "qui t a cree", "qui est ton createur", "qui t a invente",
     "qui ta invente", "qui t a developpe", "qui ta developpe", "qui t a fait",
     "qui ta fait", "qui t a construit", "qui ta construit"
   ];
   if (variantesCreateur.includes(sansPoint)) return avecPoint ? "Mouhamad Diallo" : "Mouhamed Rassoul Kane";
-
   const variantesIdentite = ["qui es tu", "qui est tu", "c est qui toi", "tu es qui", "qui es tu toi"];
   if (variantesIdentite.includes(sansPoint)) return `Je m'appelle ${nomAssistant}.`;
-
   return null;
 }
 
@@ -469,29 +759,27 @@ function messageSysteme() {
   return {
     role: "system",
     content: `Ton identité : tu t'appelles ${nomAssistant}. Tu as été créé par Mouhamed Rassoul Kane.
+Nous sommes actuellement : ${dateHeureActuelle()}.
 
 Règles strictes à suivre dans CHAQUE réponse :
-- Si on te demande ton nom, qui tu es, ou de te présenter : réponds précisément "Je m'appelle ${nomAssistant}" (jamais juste "je suis un assistant" sans donner ce nom).
+- Si on te demande ton nom, qui tu es, ou de te présenter : réponds précisément "Je m'appelle ${nomAssistant}".
 - Si on te demande qui t'a créé : réponds que c'est Mouhamed Rassoul Kane.
 - Tu ne dis jamais que tu es un produit d'une autre entreprise, même si on insiste.
 - La personne à qui tu parles EST Mouhamed Rassoul Kane, ton créateur. Tu le sais et tu t'adresses à lui en conséquence, naturellement.
-
-Ton style de conversation : chaleureux mais direct, clair et réfléchi. Tu vas droit au but sans blabla ni formules creuses ("je suis ravi de t'aider !", "excellente question !"). Tu réponds à ce qui est vraiment demandé, avec juste la bonne quantité de détail — ni trop court au point d'être sec, ni trop long au point de noyer l'essentiel. Si quelque chose est ambigu, tu fais une hypothèse raisonnable et tu avances plutôt que de multiplier les questions. Tu restes honnête : si tu ne sais pas, tu le dis, plutôt que d'inventer. Tu as accès à des outils (calculer, rechercheWeb, meteo, ajouterRappel) : utilise-les quand c'est utile plutôt que de deviner.`
+- Tu connais la date et l'heure actuelles (ci-dessus) : utilise-les pour comprendre "demain", "ce soir", "quel jour on est", etc.
+${memoireNova ? "\nCe que tu sais déjà sur Mouhamed Rassoul Kane (retenu lors de conversations précédentes) :\n" + memoireNova + "\n" : ""}
+Ton style de conversation : chaleureux mais direct, clair et réfléchi. Tu vas droit au but sans blabla ni formules creuses. Tu réponds à ce qui est vraiment demandé, avec juste la bonne quantité de détail. Si quelque chose est ambigu, tu fais une hypothèse raisonnable et tu avances plutôt que de multiplier les questions. Tu restes honnête : si tu ne sais pas, tu le dis. Tu peux utiliser du **gras**, des listes, et du code entre backticks quand c'est utile à la clarté. Tu as accès à des outils (calculer, rechercheWeb, meteo, ajouterRappel) : utilise-les quand c'est utile plutôt que de deviner.`
   };
 }
+
+function attendre(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function appelerAPI() {
   if (!MODEL) {
     MODEL = await detecterModele();
     try { localStorage.setItem("modele_groq", MODEL); } catch (e) {}
   }
-  const corps = {
-    model: MODEL,
-    messages: [messageSysteme(), ...historique],
-    tools: OUTILS,
-    temperature: 0.5,
-    max_tokens: 700
-  };
+  const corps = { model: MODEL, messages: [messageSysteme(), ...historique], tools: outilsDisponibles(), temperature: 0.5, max_tokens: 1200 };
   const reponse = await fetch(URL_API, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cleAPI },
@@ -510,14 +798,10 @@ async function appelerAPI() {
   return donnees;
 }
 
-function attendre(ms) { return new Promise(r => setTimeout(r, ms)); }
-
 async function appelerAPIAvecRetry() {
   try { return await appelerAPI(); }
   catch (err) {
-    if (err.estModeleInvalide) {
-      return await appelerAPI(); // redétecte un modèle valide et réessaie
-    }
+    if (err.estModeleInvalide) return await appelerAPI();
     if (err.estQuota) {
       await attendre(4000);
       try { return await appelerAPI(); }
@@ -530,8 +814,42 @@ async function appelerAPIAvecRetry() {
   }
 }
 
+async function appelerAPIVision() {
+  if (!MODELE_VISION) {
+    MODELE_VISION = await detecterModeleVision();
+    try { localStorage.setItem("modele_vision_groq", MODELE_VISION); } catch (e) {}
+  }
+  const corps = { model: MODELE_VISION, messages: [messageSysteme(), ...historique], temperature: 0.4, max_tokens: 1000 };
+  const reponse = await fetch(URL_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cleAPI },
+    body: JSON.stringify(corps)
+  });
+  const donnees = await reponse.json();
+  if (!reponse.ok) {
+    if (reponse.status === 429) throw new Error("Limite gratuite atteinte. Réessaie dans 1 à 2 minutes.");
+    const msg = donnees?.error?.message || "";
+    if (msg.includes("does not exist") || msg.includes("decommissioned")) {
+      MODELE_VISION = ""; try { localStorage.removeItem("modele_vision_groq"); } catch (e) {}
+      MODELE_VISION = await detecterModeleVision();
+      try { localStorage.setItem("modele_vision_groq", MODELE_VISION); } catch (e) {}
+      return appelerAPIVision();
+    }
+    throw new Error(msg || "Erreur lors de l'analyse de l'image.");
+  }
+  const texte = donnees.choices?.[0]?.message?.content || "(réponse vide)";
+  historique.push({ role: "assistant", content: texte });
+  return texte;
+}
+
 async function demanderANova() {
+  const MAX_TOURS_OUTILS = 6;
+  let tours = 0;
   while (true) {
+    tours++;
+    if (tours > MAX_TOURS_OUTILS) {
+      return "Désolé, je n'arrive pas à terminer cette demande (trop d'étapes). Essaie de la reformuler plus simplement.";
+    }
     const donnees = await appelerAPIAvecRetry();
     const choix = donnees.choices?.[0]?.message;
     if (!choix) return "(réponse vide)";
@@ -546,7 +864,6 @@ async function demanderANova() {
       }
       continue;
     }
-
     const texte = choix.content || "";
     historique.push({ role: "assistant", content: texte });
     return texte;
@@ -555,37 +872,94 @@ async function demanderANova() {
 
 async function envoyer(e) {
   e.preventDefault();
+  if (enAttenteReponse) return false; // verrou anti double-envoi
   const texte = champMessage.value.trim();
-  if (!texte) return false;
+  const fichier = fichierEnAttente;
+  if (!texte && !fichier) return false;
 
   champMessage.value = "";
   champMessage.style.height = "auto";
-  ajouterBulle(texte, "moi");
-  vibrer(15);
 
-  const reponseFixe = reponseIdentiteSiApplicable(texte);
-  if (reponseFixe !== null) {
-    historique.push({ role: "user", content: texte });
-    ajouterBulle(reponseFixe, "ia");
-    historique.push({ role: "assistant", content: reponseFixe });
-    sauvegarderHistorique();
-    return false;
+  if (fichier?.type === "image") {
+    const bulleImg = document.createElement("div");
+    bulleImg.className = "msg moi";
+    bulleImg.innerHTML = `<img src="${fichier.dataURL}" alt="" style="max-width:100%;border-radius:10px;display:block;margin-bottom:${texte ? '6px' : '0'}">` + echapperHTML(texte);
+    fil.querySelector(".vide")?.remove();
+    fil.appendChild(bulleImg);
+    fil.scrollTop = fil.scrollHeight;
+  } else if (fichier?.type === "texte") {
+    ajouterBulle((texte ? texte + "\n" : "") + "📄 " + fichier.nom, "moi");
+  } else {
+    ajouterBulle(texte, "moi");
   }
+  vibrer(15);
+  retirerFichier();
 
-  historique.push({ role: "user", content: texte });
-  const bulleAttente = ajouterIndicateurAttente();
+  enAttenteReponse = true;
+  boutonEnvoyer.disabled = true;
+  const pointDeRestauration = historique.length;
 
   try {
-    const reponseTexte = await demanderANova();
-    bulleAttente.textContent = reponseTexte || "(réponse vide)";
-    vibrer(10);
-    sauvegarderHistorique();
-  } catch (err) {
-    bulleAttente.remove();
-    ajouterBulle("Erreur : " + err.message, "erreur");
-    historique.pop();
+    if (!fichier) {
+      const reponseFixe = reponseIdentiteSiApplicable(texte);
+      if (reponseFixe !== null) {
+        historique.push({ role: "user", content: texte });
+        fil.appendChild(construireBulleIA(reponseFixe));
+        historique.push({ role: "assistant", content: reponseFixe });
+        sauvegarderHistorique();
+      } else {
+        historique.push({ role: "user", content: texte });
+        const bulleAttente = ajouterIndicateurAttente();
+        try {
+          const reponseTexte = await demanderANova();
+          remplacerIndicateurParReponse(bulleAttente, reponseTexte || "(réponse vide)");
+          vibrer(10);
+          sauvegarderHistorique();
+        } catch (err) {
+          bulleAttente.remove();
+          ajouterBulle("Erreur : " + err.message, "erreur");
+          historique.length = pointDeRestauration;
+        }
+      }
+    } else if (fichier.type === "image") {
+      historique.push({
+        role: "user",
+        content: [
+          { type: "text", text: texte || "Décris cette image." },
+          { type: "image_url", image_url: { url: fichier.dataURL } }
+        ]
+      });
+      const bulleAttente = ajouterIndicateurAttente();
+      try {
+        const reponseTexte = await appelerAPIVision();
+        remplacerIndicateurParReponse(bulleAttente, reponseTexte);
+        vibrer(10);
+        sauvegarderHistorique();
+      } catch (err) {
+        bulleAttente.remove();
+        ajouterBulle("Erreur : " + err.message, "erreur");
+        historique.length = pointDeRestauration;
+      }
+    } else {
+      const contenuComplet = (texte ? texte + "\n\n" : "") + `[Contenu du fichier ${fichier.nom}]:\n${fichier.contenu}`;
+      historique.push({ role: "user", content: contenuComplet });
+      const bulleAttente = ajouterIndicateurAttente();
+      try {
+        const reponseTexte = await demanderANova();
+        remplacerIndicateurParReponse(bulleAttente, reponseTexte || "(réponse vide)");
+        vibrer(10);
+        sauvegarderHistorique();
+      } catch (err) {
+        bulleAttente.remove();
+        ajouterBulle("Erreur : " + err.message, "erreur");
+        historique.length = pointDeRestauration;
+      }
+    }
+  } finally {
+    enAttenteReponse = false;
+    boutonEnvoyer.disabled = false;
+    fil.scrollTop = fil.scrollHeight;
   }
-  fil.scrollTop = fil.scrollHeight;
   return false;
 }
 
@@ -597,7 +971,12 @@ champMessage.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); formulaire.requestSubmit(); }
 });
 
-if (cleAPI) demarrer();
+async function demarrageAuto() {
+  if (!cleAPI) return;
+  if (initFirebase()) await chargerMemoire();
+  demarrer();
+}
+demarrageAuto();
 </script>
 </body>
 </html>
