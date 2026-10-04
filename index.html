@@ -601,3 +601,82 @@ if (cleAPI) demarrer();
 </script>
 </body>
 </html>
+async function appelerGroq(messages, surTexte) {
+  const reponse = await fetch(URL_API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + localStorage.getItem("cle_groq")
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: messages,
+      stream: true
+    })
+  });
+
+if (!reponse.ok) {
+    const erreur = await reponse.json().catch(() => null);
+    throw new Error(
+      reponse.status === 401 ? "Clé API invalide. Vérifiez-la dans le menu ⋮ → 🔑 Changer de clé." :
+      reponse.status === 429 ? "Trop de requêtes. Attendez quelques secondes." :
+      "Erreur API (" + reponse.status + ")"
+    );
+  }
+
+const lecteur = reponse.body.getReader();
+  const decodeur = new TextDecoder();
+  let tampon = "";
+
+while (true) {
+    const { done, value } = await lecteur.read();
+    if (done) break;
+    tampon += decodeur.decode(value, { stream: true });
+
+for (const ligne of tampon.split("\n")) {
+      if (!ligne.startsWith("data: ")) continue;
+      const donnees = ligne.slice(6).trim();
+      if (donnees === "[DONE]") continue;
+      try {
+        const fragment = JSON.parse(donnees).choices[0].delta.content;
+        if (fragment) surTexte(fragment);
+      } catch (e) { /* ligne partielle */ }
+    }
+    tampon = tampon.split("\n").pop();
+  }
+}
+let historique = [];
+
+function sauvegarderHistorique() {
+  // Limite de contexte : 40 messages (20 échanges)
+  localStorage.setItem("nova_historique", JSON.stringify(historique.slice(-40)));
+}
+
+function restaurerHistorique() {
+  try {
+    historique = JSON.parse(localStorage.getItem("nova_historique")) || [];
+    for (const m of historique) {
+      if (m.role === "user") ajouterMessage(m.content, "moi");
+      else if (m.role === "assistant") ajouterMessage(m.content, "ia");
+    }
+  } catch (e) { historique = []; }
+}
+historique.push({ role: "user", content: message });
+sauvegarderHistorique();
+
+await appelerGroq(historique, (fragment) => {
+  bulleIA.textContent += fragment; // affichage progressif
+  defilerBas();
+});
+
+historique.push({ role: "assistant", content: texteReponse });
+sauvegarderHistorique();
+// Bouton "Effacer la clé" — sécurise les appareils partagés
+function effacerCle() {
+  localStorage.removeItem("cle_groq");
+  localStorage.removeItem("nova_historique");
+  location.reload();
+}
+
+// Récupérer la clé API à partir du code d'erreur 401
+// → message d'erreur spécifique (voir appelerGroq ci-dessus)
