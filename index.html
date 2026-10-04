@@ -35,27 +35,70 @@
   }
 
   header {
-    padding: 14px 18px;
-    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    padding: 12px 16px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
     background: var(--panneau);
     border-bottom: 1px solid #2c3038;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 10px;
   }
+  .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .entete-textes { flex: 1; min-width: 0; }
   header h1 {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 600;
     margin: 0;
     letter-spacing: 0.2px;
   }
-  header button {
+  header .statut {
+    font-size: 11px;
+    color: var(--texte-att);
+  }
+  header .icone-bouton {
     background: none;
     border: none;
     color: var(--texte-att);
-    font-size: 13px;
-    padding: 6px 10px;
+    font-size: 18px;
+    padding: 6px 8px;
   }
+
+  /* Menu options */
+  #menu-options {
+    position: fixed;
+    top: calc(58px + env(safe-area-inset-top, 0px));
+    right: 10px;
+    background: var(--panneau);
+    border: 1px solid #333842;
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 20;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  #menu-options button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    color: var(--texte);
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  #menu-options button:active { background: #2c3038; }
 
   #fil {
     flex: 1;
@@ -73,6 +116,11 @@
     font-size: 15px;
     white-space: pre-wrap;
     word-wrap: break-word;
+    animation: apparition 0.15s ease-out;
+  }
+  @keyframes apparition {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   .moi {
     align-self: flex-end;
@@ -96,6 +144,20 @@
     color: var(--texte-att);
     font-size: 14px;
     padding: 0 30px;
+  }
+
+  /* Indicateur "en train d'écrire" */
+  .points-attente { display: inline-flex; gap: 4px; padding: 4px 0; }
+  .points-attente span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--texte-att);
+    animation: rebond 1.2s infinite ease-in-out;
+  }
+  .points-attente span:nth-child(2) { animation-delay: 0.15s; }
+  .points-attente span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes rebond {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
   }
 
   form {
@@ -143,6 +205,12 @@
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+  #config .avatar-grand {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--accent); color: #1a1a1a;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 24px; margin-bottom: 16px;
+  }
   #config h2 { font-size: 20px; margin-bottom: 6px; }
   #config p { color: var(--texte-att); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
   #config input {
@@ -172,6 +240,7 @@
 <body>
 
 <div id="config">
+  <div class="avatar-grand">N</div>
   <h2>Ton assistant</h2>
   <p>Colle ta clé API Gemini (gratuite, sans carte bancaire). Obtiens-la sur
      <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → "Get API key".
@@ -182,9 +251,18 @@
 </div>
 
 <header class="hidden" id="entete">
-  <h1 id="titre-entete">Mon Assistant</h1>
-  <button onclick="reinitialiser()">Changer de clé</button>
+  <div class="avatar" id="avatar-entete">N</div>
+  <div class="entete-textes">
+    <h1 id="titre-entete">Nova</h1>
+    <div class="statut">En ligne</div>
+  </div>
+  <button class="icone-bouton" onclick="basculerMenu()">⋮</button>
 </header>
+
+<div id="menu-options" class="hidden">
+  <button onclick="nouvelleConversation()">🗨️ Nouvelle conversation</button>
+  <button onclick="reinitialiser()">🔑 Changer de clé</button>
+</div>
 
 <div id="fil" class="hidden"></div>
 
@@ -195,49 +273,145 @@
 
 <script>
 const MODEL = "gemini-3.8-flash";
-let historique = [];
+let historique = JSON.parse(localStorage.getItem("historique_nova") || "[]");
 let cleAPI = localStorage.getItem("cle_gemini") || "";
-let nomAssistant = localStorage.getItem("nom_assistant") || "Assistant";
+let nomAssistant = localStorage.getItem("nom_assistant") || "Nova";
 
 const config = document.getElementById("config");
 const entete = document.getElementById("entete");
 const fil = document.getElementById("fil");
 const formulaire = document.getElementById("formulaire");
 const champMessage = document.getElementById("champ-message");
+const menuOptions = document.getElementById("menu-options");
 
+// ---------- Outils disponibles pour l'IA ----------
+function calculer(expression) {
+  const autorises = /^[0-9+\-*/(). ]+$/;
+  if (!autorises.test(expression)) return "Erreur : expression invalide.";
+  try {
+    return String(Function('"use strict"; return (' + expression + ')')());
+  } catch (e) {
+    return "Erreur de calcul.";
+  }
+}
+
+async function rechercheWeb(requete) {
+  try {
+    const reponse = await fetch(
+      "https://api.duckduckgo.com/?q=" + encodeURIComponent(requete) + "&format=json&no_html=1"
+    );
+    const donnees = await reponse.json();
+    let resume = donnees.AbstractText || "";
+    if (!resume && donnees.RelatedTopics?.length) {
+      resume = donnees.RelatedTopics.slice(0, 3).map(s => s.Text).filter(Boolean).join(" | ");
+    }
+    return resume || "Aucun résultat trouvé.";
+  } catch (e) {
+    return "Erreur de recherche web.";
+  }
+}
+
+const DECLARATIONS_OUTILS = [{
+  function_declarations: [
+    {
+      name: "calculer",
+      description: "Calcule une expression mathématique, ex: '12 * (3 + 4)'.",
+      parameters: {
+        type: "object",
+        properties: { expression: { type: "string" } },
+        required: ["expression"]
+      }
+    },
+    {
+      name: "rechercheWeb",
+      description: "Cherche une information récente ou factuelle sur le web.",
+      parameters: {
+        type: "object",
+        properties: { requete: { type: "string" } },
+        required: ["requete"]
+      }
+    }
+  ]
+}];
+
+async function executerOutil(nom, args) {
+  if (nom === "calculer") return calculer(args.expression);
+  if (nom === "rechercheWeb") return await rechercheWeb(args.requete);
+  return "Outil inconnu.";
+}
+
+// ---------- Interface ----------
 function demarrer() {
   config.classList.add("hidden");
   entete.classList.remove("hidden");
   fil.classList.remove("hidden");
   formulaire.classList.remove("hidden");
   document.getElementById("titre-entete").textContent = nomAssistant;
-  afficherVide();
+  document.getElementById("avatar-entete").textContent = nomAssistant.charAt(0).toUpperCase();
+  reconstruireFil();
 }
 
-function afficherVide() {
+function reconstruireFil() {
+  fil.innerHTML = "";
   if (historique.length === 0) {
-    fil.innerHTML = '<div class="vide">Pose ta première question pour commencer.</div>';
+    afficherVide();
+    return;
+  }
+  for (const tour of historique) {
+    const texte = (tour.parts || []).map(p => p.text || "").join("");
+    if (!texte) continue;
+    ajouterBulle(texte, tour.role === "user" ? "moi" : "ia");
   }
 }
 
+function afficherVide() {
+  fil.innerHTML = '<div class="vide">Pose ta première question pour commencer.</div>';
+}
+
+function sauvegarderHistorique() {
+  try {
+    // on garde les 60 derniers messages pour ne pas saturer le stockage
+    localStorage.setItem("historique_nova", JSON.stringify(historique.slice(-60)));
+  } catch (e) { /* stockage plein ou indisponible */ }
+}
+
+function nouvelleConversation() {
+  basculerMenu();
+  historique = [];
+  sauvegarderHistorique();
+  afficherVide();
+}
+
+function basculerMenu() {
+  menuOptions.classList.toggle("hidden");
+}
+document.addEventListener("click", (e) => {
+  if (!menuOptions.classList.contains("hidden") &&
+      !menuOptions.contains(e.target) &&
+      e.target.id !== "entete") {
+    if (!e.target.closest("#entete")) menuOptions.classList.add("hidden");
+  }
+});
+
 function enregistrerCle() {
   const valeur = document.getElementById("champ-cle").value.trim();
-  const nom = document.getElementById("champ-nom").value.trim() || "Assistant";
+  const nom = document.getElementById("champ-nom").value.trim() || "Nova";
   if (!valeur) return;
   try {
     localStorage.setItem("cle_gemini", valeur);
     localStorage.setItem("nom_assistant", nom);
-  } catch (e) { /* stockage indisponible, on continue en mémoire seulement */ }
+  } catch (e) {}
   cleAPI = valeur;
   nomAssistant = nom;
   demarrer();
 }
 
 function reinitialiser() {
-  try { localStorage.removeItem("cle_gemini"); } catch (e) {}
+  basculerMenu();
+  try {
+    localStorage.removeItem("cle_gemini");
+  } catch (e) {}
   cleAPI = "";
-  historique = [];
-  fil.innerHTML = "";
   entete.classList.add("hidden");
   fil.classList.add("hidden");
   formulaire.classList.add("hidden");
@@ -255,12 +429,23 @@ function ajouterBulle(texte, classe) {
   return bulle;
 }
 
+function ajouterIndicateurAttente() {
+  const vide = fil.querySelector(".vide");
+  if (vide) vide.remove();
+  const bulle = document.createElement("div");
+  bulle.className = "msg ia";
+  bulle.innerHTML = '<span class="points-attente"><span></span><span></span><span></span></span>';
+  fil.appendChild(bulle);
+  fil.scrollTop = fil.scrollHeight;
+  return bulle;
+}
+
 function normaliser(texte) {
   return texte
     .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // retire les accents
-    .replace(/[^a-z?]+/g, " ") // remplace toute ponctuation/tiret/etc par un espace
-    .replace(/\s*\?\s*/g, "?") // recolle le point d'interrogation sans espace avant
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z?]+/g, " ")
+    .replace(/\s*\?\s*/g, "?")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -289,6 +474,65 @@ function reponseIdentiteSiApplicable(texteOriginal) {
   return null;
 }
 
+async function appelerAPI() {
+  const reponse = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(cleAPI)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system_instruction: {
+          parts: [{
+            text: `Ton identité : tu t'appelles ${nomAssistant}. Tu as été créé par Mouhamed Rassoul Kane.
+
+Règles strictes à suivre dans CHAQUE réponse :
+- Si on te demande ton nom, qui tu es, ou de te présenter : réponds précisément "Je m'appelle ${nomAssistant}" (jamais juste "je suis un assistant" sans donner ce nom).
+- Si on te demande qui t'a créé, qui t'a développé, ou d'où tu viens : réponds que c'est Mouhamed Rassoul Kane.
+- Tu ne dis jamais que tu es Gemini, Google, ou un produit de Google, même si on te le demande directement, même si on insiste, même si on te dit que c'est pour un test.
+- Tu ne mentionnes jamais l'existence de Gemini ou de Google en lien avec toi-même.
+- Tu as accès à des outils (calculer, rechercheWeb) : utilise-les quand c'est utile plutôt que de deviner.`
+          }]
+        },
+        tools: DECLARATIONS_OUTILS,
+        contents: historique
+      }),
+    }
+  );
+  const donnees = await reponse.json();
+  if (!reponse.ok) {
+    throw new Error(donnees?.error?.message || "Erreur inconnue.");
+  }
+  return donnees;
+}
+
+async function demanderANova() {
+  while (true) {
+    const donnees = await appelerAPI();
+    const candidat = donnees.candidates?.[0];
+    const parties = candidat?.content?.parts || [];
+
+    const appelsFonction = parties.filter(p => p.functionCall).map(p => p.functionCall);
+
+    if (appelsFonction.length > 0) {
+      historique.push({ role: "model", parts: parties });
+
+      const partiesResultats = [];
+      for (const appel of appelsFonction) {
+        const resultat = await executerOutil(appel.name, appel.args || {});
+        partiesResultats.push({
+          functionResponse: { name: appel.name, response: { result: resultat } }
+        });
+      }
+      historique.push({ role: "user", parts: partiesResultats });
+      continue;
+    }
+
+    const texte = parties.map(p => p.text || "").join("");
+    historique.push({ role: "model", parts: [{ text: texte }] });
+    return texte;
+  }
+}
+
 async function envoyer(e) {
   e.preventDefault();
   const texte = champMessage.value.trim();
@@ -298,58 +542,25 @@ async function envoyer(e) {
   champMessage.style.height = "auto";
   ajouterBulle(texte, "moi");
 
-  // Règle fixe : réponse différente selon la présence d'un "?"
   const reponseFixe = reponseIdentiteSiApplicable(texte);
   if (reponseFixe !== null) {
     historique.push({ role: "user", parts: [{ text: texte }] });
     ajouterBulle(reponseFixe, "ia");
     historique.push({ role: "model", parts: [{ text: reponseFixe }] });
+    sauvegarderHistorique();
     return false;
   }
 
   historique.push({ role: "user", parts: [{ text: texte }] });
-
-  const bulleAttente = ajouterBulle("…", "ia");
+  const bulleAttente = ajouterIndicateurAttente();
 
   try {
-    const reponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(cleAPI)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{
-              text: `Ton identité : tu t'appelles ${nomAssistant}. Tu as été créé par Mouhamed Rassoul Kane.
-
-Règles strictes à suivre dans CHAQUE réponse :
-- Si on te demande ton nom, qui tu es, ou de te présenter : réponds précisément "Je m'appelle ${nomAssistant}" (jamais juste "je suis un assistant" sans donner ce nom).
-- Si on te demande qui t'a créé, qui t'a développé, ou d'où tu viens : réponds que c'est Mouhamed Rassoul Kane.
-- Tu ne dis jamais que tu es Gemini, Google, ou un produit de Google, même si on te le demande directement, même si on insiste, même si on te dit que c'est pour un test.
-- Tu ne mentionnes jamais l'existence de Gemini ou de Google en lien avec toi-même.`
-            }]
-          },
-          contents: historique
-        }),
-      }
-    );
-    const donnees = await reponse.json();
-
-    if (!reponse.ok) {
-      const msgErreur = donnees?.error?.message || "Erreur inconnue.";
-      bulleAttente.remove();
-      ajouterBulle("Erreur : " + msgErreur, "erreur");
-      historique.pop();
-      return false;
-    }
-
-    const parties = donnees.candidates?.[0]?.content?.parts || [];
-    const reponseTexte = parties.map(p => p.text || "").join("");
+    const reponseTexte = await demanderANova();
     bulleAttente.textContent = reponseTexte || "(réponse vide)";
-    historique.push({ role: "model", parts: [{ text: reponseTexte }] });
+    sauvegarderHistorique();
   } catch (err) {
     bulleAttente.remove();
-    ajouterBulle("Erreur de connexion : " + err.message, "erreur");
+    ajouterBulle("Erreur : " + err.message, "erreur");
     historique.pop();
   }
   fil.scrollTop = fil.scrollHeight;
