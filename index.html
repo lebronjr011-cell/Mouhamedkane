@@ -42,10 +42,20 @@
   * { box-sizing: border-box; }
   html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
   body {
-    height: 100%; margin: 0; background: var(--fond); color: var(--texte);
+    height: 100%; margin: 0; color: var(--texte);
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
     display: flex; flex-direction: column; transition: background 0.2s, color 0.2s;
+    background-color: var(--fond);
+    background-image:
+      radial-gradient(1.5px 1.5px at 15% 12%, color-mix(in srgb, var(--accent) 55%, transparent), transparent),
+      radial-gradient(1px 1px at 68% 8%, color-mix(in srgb, var(--accent) 40%, transparent), transparent),
+      radial-gradient(1px 1px at 85% 22%, color-mix(in srgb, var(--accent) 35%, transparent), transparent),
+      radial-gradient(1.5px 1.5px at 40% 5%, color-mix(in srgb, var(--accent) 30%, transparent), transparent),
+      radial-gradient(1px 1px at 92% 15%, color-mix(in srgb, var(--accent) 45%, transparent), transparent);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
   }
+  :root[data-theme="clair"] body { background-image: none; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
   }
@@ -67,7 +77,12 @@
   .entete-textes { flex: 1; min-width: 0; }
   header h1 { font-family: var(--police-titre); font-size: 17px; font-weight: 700; margin: 0; letter-spacing: 0.1px; }
   header .statut { font-size: 11px; color: var(--texte-att); display: flex; align-items: center; gap: 5px; }
-  header .statut::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px 1px var(--accent); }
+  header .statut::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 6px 1px var(--accent);
+    animation: scintiller 2.4s infinite ease-in-out;
+  }
+  @keyframes scintiller { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   header .icone-bouton { background: none; border: none; color: var(--texte-att); font-size: 19px; padding: 6px 8px; border-radius: 8px; }
   header .icone-bouton:active { background: color-mix(in srgb, var(--texte-att) 15%, transparent); }
 
@@ -82,7 +97,11 @@
   }
   #menu-options button:active { background: color-mix(in srgb, var(--accent) 10%, transparent); }
 
-  #fil { flex: 1; overflow-y: auto; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; }
+  #fil {
+    flex: 1; overflow-y: auto; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px;
+    mask-image: linear-gradient(to bottom, transparent 0, #000 14px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px);
+  }
   .msg {
     max-width: 82%; padding: 10px 14px; border-radius: 16px;
     line-height: 1.55; font-size: 15px; word-wrap: break-word; animation: apparition 0.18s ease-out;
@@ -100,25 +119,48 @@
   .ia pre code { background: none; padding: 0; border: none; }
   .ia a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); }
   .ia strong { font-weight: 700; }
+  .diagramme-mermaid { background: var(--code-fond); border: 1px solid var(--bordure); border-radius: 10px; padding: 10px; margin: 9px 0; overflow-x: auto; display: flex; justify-content: center; }
+  .bloc-raisonnement {
+    border: 1px solid var(--bordure); border-radius: 10px; margin-bottom: 10px; overflow: hidden;
+  }
+  .bloc-raisonnement summary {
+    padding: 8px 12px; font-size: 12.5px; color: var(--texte-att); cursor: pointer; user-select: none;
+  }
+  .bloc-raisonnement .contenu-raisonnement {
+    padding: 2px 12px 10px; font-size: 13px; color: var(--texte-att); line-height: 1.5; white-space: pre-wrap;
+  }
   .bouton-copier {
     background: none; border: none; color: var(--texte-att); font-size: 12px;
     padding: 3px 7px; margin-top: 3px; cursor: pointer; border-radius: 6px;
   }
   .bouton-copier:active { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
   .erreur { align-self: center; color: var(--erreur); font-size: 13px; text-align: center; }
+  .vide-icone {
+    width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 14px;
+    background: radial-gradient(circle at 32% 28%, var(--accent-eclat), var(--accent) 65%);
+    box-shadow: 0 6px 28px -6px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
   .vide { margin: auto; text-align: center; color: var(--texte-att); font-size: 14px; padding: 0 24px; }
   .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px; padding: 0 6px; }
   .suggestion {
     background: var(--panneau); border: 1px solid var(--bordure); color: var(--texte);
     padding: 9px 15px; border-radius: 18px; font-size: 13px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
   }
   .suggestion:active { background: var(--accent); color: #1a1308; border-color: var(--accent); }
 
-  .points-attente { display: inline-flex; gap: 4px; padding: 4px 0; }
-  .points-attente span { width: 6px; height: 6px; border-radius: 50%; background: var(--texte-att); animation: rebond 1.2s infinite ease-in-out; }
-  .points-attente span:nth-child(2) { animation-delay: 0.15s; }
-  .points-attente span:nth-child(3) { animation-delay: 0.3s; }
-  @keyframes rebond { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
+  .points-attente { display: inline-flex; align-items: center; gap: 5px; padding: 4px 0; }
+  .points-attente span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    animation: respiration 1.4s infinite ease-in-out;
+  }
+  .points-attente span:nth-child(2) { animation-delay: 0.25s; }
+  .points-attente span:nth-child(3) { animation-delay: 0.5s; }
+  @keyframes respiration {
+    0%, 100% { opacity: 0.25; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
 
   form {
     display: flex; align-items: flex-end; gap: 6px; padding: 10px 12px;
@@ -209,6 +251,8 @@
 <div id="menu-options" class="hidden" role="menu">
   <button onclick="nouvelleConversation()">🗨️ Nouvelle conversation</button>
   <button onclick="basculerTheme()">🌓 Changer de thème</button>
+  <button onclick="changerTon()" id="bouton-ton">💬 Ton : Chaleureux</button>
+  <button onclick="basculerRaisonnement()" id="bouton-raisonnement">🧠 Raisonnement visible : Off</button>
   <button onclick="reinitialiser()">🔑 Changer de clé</button>
   <button onclick="voirCodePersonnel()" id="bouton-code" class="hidden">🔗 Mon code de synchro</button>
 </div>
@@ -225,6 +269,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>
 const URL_API = "https://api.groq.com/openai/v1/chat/completions";
 const URL_MODELES = "https://api.groq.com/openai/v1/models";
@@ -271,7 +316,38 @@ function basculerTheme() {
 }
 appliquerTheme();
 
+try {
+  if (window.mermaid) {
+    const themeMermaid = document.documentElement.getAttribute("data-theme") === "clair" ? "default" : "dark";
+    mermaid.initialize({ startOnLoad: false, theme: themeMermaid, securityLevel: "strict" });
+  }
+} catch (e) {}
+
 function vibrer(duree) { try { if (navigator.vibrate) navigator.vibrate(duree); } catch (e) {} }
+
+// ---------- Ton de conversation ----------
+const TONS = ["Chaleureux", "Formel", "Concis"];
+const TONS_INSTRUCTIONS = {
+  "Chaleureux": "Ton chaleureux mais direct, clair et réfléchi. Tu vas droit au but sans blabla ni formules creuses.",
+  "Formel": "Ton formel et professionnel : vouvoiement implicite dans le registre, phrases soignées, pas de familiarité ni d'emoji.",
+  "Concis": "Ton extrêmement concis : réponses en une phrase courte dès que possible, zéro détail superflu, pas d'explications sauf si demandées explicitement."
+};
+function tonActuel() { return localStorage.getItem("ton_nova") || "Chaleureux"; }
+function changerTon() {
+  const actuel = tonActuel();
+  const indexSuivant = (TONS.indexOf(actuel) + 1) % TONS.length;
+  const nouveau = TONS[indexSuivant];
+  try { localStorage.setItem("ton_nova", nouveau); } catch (e) {}
+  document.getElementById("bouton-ton").textContent = "💬 Ton : " + nouveau;
+}
+
+// ---------- Mode raisonnement visible ----------
+function raisonnementActif() { return localStorage.getItem("raisonnement_nova") === "oui"; }
+function basculerRaisonnement() {
+  const nouveau = !raisonnementActif();
+  try { localStorage.setItem("raisonnement_nova", nouveau ? "oui" : "non"); } catch (e) {}
+  document.getElementById("bouton-raisonnement").textContent = "🧠 Raisonnement visible : " + (nouveau ? "On" : "Off");
+}
 
 // ---------- Base de données (Firebase, optionnelle) ----------
 let dbFirestore = null;
@@ -351,8 +427,15 @@ async function terminerNote(texteRecherche) {
 function echapperHTML(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+let compteurMermaid = 0;
 function formaterTexte(texte) {
   let s = echapperHTML(texte);
+  // diagrammes mermaid : ```mermaid ... ```
+  s = s.replace(/```mermaid\n([\s\S]*?)```/g, (m, code) => {
+    compteurMermaid++;
+    const id = "mermaid-" + Date.now() + "-" + compteurMermaid;
+    return `<div class="diagramme-mermaid mermaid" id="${id}">${code.trim()}</div>`;
+  });
   // blocs de code ```...```
   s = s.replace(/```([\s\S]*?)```/g, (m, code) => `<pre><code>${code.trim()}</code></pre>`);
   // code en ligne `...`
@@ -580,21 +663,43 @@ function demarrer() {
   formulaire.classList.remove("hidden");
   document.getElementById("titre-entete").textContent = nomAssistant;
   document.getElementById("avatar-entete").textContent = nomAssistant.charAt(0).toUpperCase();
+  document.getElementById("bouton-ton").textContent = "💬 Ton : " + tonActuel();
+  document.getElementById("bouton-raisonnement").textContent = "🧠 Raisonnement visible : " + (raisonnementActif() ? "On" : "Off");
   reconstruireFil();
+}
+
+function extraireRaisonnement(texte) {
+  const correspondance = texte.match(/\*\*Raisonnement\s*:?\*\*\s*([\s\S]*?)\n\s*\*\*R[ée]ponse(?:\s*finale)?\s*:?\*\*\s*([\s\S]*)/i);
+  if (correspondance) return { raisonnement: correspondance[1].trim(), reponse: correspondance[2].trim() };
+  return null;
 }
 
 function construireBulleIA(texte) {
   const conteneur = document.createElement("div");
   conteneur.className = "bloc-ia";
+  const scinde = extraireRaisonnement(texte);
+
+  if (scinde) {
+    const details = document.createElement("details");
+    details.className = "bloc-raisonnement";
+    details.innerHTML = `<summary>🧠 Voir le raisonnement</summary><div class="contenu-raisonnement">${echapperHTML(scinde.raisonnement)}</div>`;
+    conteneur.appendChild(details);
+  }
+
+  const texteAffiche = scinde ? scinde.reponse : texte;
   const corps = document.createElement("div");
   corps.className = "msg ia";
-  corps.innerHTML = formaterTexte(texte);
+  corps.innerHTML = formaterTexte(texteAffiche);
   const bouton = document.createElement("button");
   bouton.className = "bouton-copier";
   bouton.textContent = "Copier";
-  bouton.onclick = () => copierTexte(bouton, texte);
+  bouton.onclick = () => copierTexte(bouton, texteAffiche);
   conteneur.appendChild(corps);
   conteneur.appendChild(bouton);
+
+  if (window.mermaid && corps.querySelector(".mermaid")) {
+    setTimeout(() => { try { mermaid.run({ nodes: corps.querySelectorAll(".mermaid") }); } catch (e) {} }, 0);
+  }
   return conteneur;
 }
 
@@ -634,6 +739,7 @@ function afficherVide() {
   ];
   fil.innerHTML = `
     <div class="vide">
+      <div class="vide-icone"></div>
       Pose ta première question pour commencer, ou essaie :
       <div class="suggestions">
         ${suggestions.map(s => `<button type="button" class="suggestion" onclick="envoyerSuggestion(this)">${s}</button>`).join("")}
@@ -768,7 +874,8 @@ Règles strictes à suivre dans CHAQUE réponse :
 - La personne à qui tu parles EST Mouhamed Rassoul Kane, ton créateur. Tu le sais et tu t'adresses à lui en conséquence, naturellement.
 - Tu connais la date et l'heure actuelles (ci-dessus) : utilise-les pour comprendre "demain", "ce soir", "quel jour on est", etc.
 ${memoireNova ? "\nCe que tu sais déjà sur Mouhamed Rassoul Kane (retenu lors de conversations précédentes) :\n" + memoireNova + "\n" : ""}
-Ton style de conversation : chaleureux mais direct, clair et réfléchi. Tu vas droit au but sans blabla ni formules creuses. Tu réponds à ce qui est vraiment demandé, avec juste la bonne quantité de détail. Si quelque chose est ambigu, tu fais une hypothèse raisonnable et tu avances plutôt que de multiplier les questions. Tu restes honnête : si tu ne sais pas, tu le dis. Tu peux utiliser du **gras**, des listes, et du code entre backticks quand c'est utile à la clarté. Tu as accès à des outils (calculer, rechercheWeb, meteo, ajouterRappel) : utilise-les quand c'est utile plutôt que de deviner.`
+Ton style de conversation : ${TONS_INSTRUCTIONS[tonActuel()]} Tu réponds à ce qui est vraiment demandé, avec juste la bonne quantité de détail. Si quelque chose est ambigu, tu fais une hypothèse raisonnable et tu avances plutôt que de multiplier les questions. Tu restes honnête : si tu ne sais pas, tu le dis. Tu peux utiliser du **gras**, des listes, et du code entre backticks quand c'est utile à la clarté. Pour un schéma ou diagramme, utilise un bloc \`\`\`mermaid avec une syntaxe Mermaid valide. Tu as accès à des outils (calculer, rechercheWeb, meteo, ajouterRappel) : utilise-les quand c'est utile plutôt que de deviner.
+${raisonnementActif() ? '\nMode raisonnement activé : pour toute question qui demande réflexion, calcul ou analyse, structure TOUJOURS ta réponse en deux parties exactement sous cette forme :\n**Raisonnement :**\n(tes étapes de réflexion, concises)\n**Réponse finale :**\n(ta réponse finale, claire et directe)\nPour une question triviale (salutation, etc.), tu peux répondre normalement sans cette structure.' : ""}`
   };
 }
 
