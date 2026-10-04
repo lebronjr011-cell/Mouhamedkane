@@ -217,6 +217,30 @@
     color: #1a1308; font-weight: 700; font-size: 15px;
   }
   #config a { color: var(--accent); }
+
+  #ecran-historique {
+    position: fixed; inset: 0; background: var(--fond); z-index: 30;
+    display: flex; flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .entete-historique {
+    padding: 14px 16px; background: var(--panneau); border-bottom: 1px solid var(--bordure);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .entete-historique h2 { font-family: var(--police-titre); font-size: 17px; margin: 0; flex: 1; }
+  .entete-historique button { background: none; border: none; color: var(--texte-att); font-size: 20px; padding: 6px 8px; }
+  #liste-conversations { flex: 1; overflow-y: auto; padding: 10px 14px; }
+  .item-conversation {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--panneau); border: 1px solid var(--bordure); border-radius: 12px;
+    padding: 13px 14px; margin-bottom: 9px;
+  }
+  .item-conversation .contenu-item { flex: 1; min-width: 0; text-align: left; background: none; border: none; color: var(--texte); }
+  .item-conversation .titre-item { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-conversation .date-item { font-size: 11.5px; color: var(--texte-att); margin-top: 2px; }
+  .item-conversation .supprimer-item { background: none; border: none; color: var(--texte-att); font-size: 16px; padding: 4px 6px; flex-shrink: 0; }
+  .vide-historique { margin: auto; text-align: center; color: var(--texte-att); font-size: 14px; padding: 40px 30px; }
+
   .hidden { display: none !important; }
 </style>
 </head>
@@ -250,6 +274,7 @@
 
 <div id="menu-options" class="hidden" role="menu">
   <button onclick="nouvelleConversation()">🗨️ Nouvelle conversation</button>
+  <button onclick="ouvrirHistorique()">📜 Historique des conversations</button>
   <button onclick="basculerTheme()">🌓 Changer de thème</button>
   <button onclick="changerTon()" id="bouton-ton">💬 Ton : Chaleureux</button>
   <button onclick="basculerRaisonnement()" id="bouton-raisonnement">🧠 Raisonnement visible : Off</button>
@@ -258,6 +283,14 @@
 </div>
 
 <div id="fil" class="hidden" aria-live="polite"></div>
+
+<div id="ecran-historique" class="hidden">
+  <div class="entete-historique">
+    <h2>Historique des conversations</h2>
+    <button onclick="fermerHistorique()" aria-label="Fermer">✕</button>
+  </div>
+  <div id="liste-conversations"></div>
+</div>
 
 <div id="zone-apercu" class="hidden"></div>
 <form class="hidden" id="formulaire" onsubmit="return envoyer(event)">
@@ -636,7 +669,7 @@ const OUTILS_BASE = [
   { type: "function", function: { name: "ajouterRappel", description: "Programme un rappel pour dans X minutes (l'app doit rester ouverte).", parameters: { type: "object", properties: { texte: { type: "string" }, dansMinutes: { type: "number" } }, required: ["texte", "dansMinutes"] } } }
 ];
 const OUTILS_BDD = [
-  { type: "function", function: { name: "memoriser", description: "Retient une information durable sur l'utilisateur (préférence, habitude, fait important) pour s'en souvenir plus tard, même sur un autre appareil.", parameters: { type: "object", properties: { info: { type: "string" } }, required: ["info"] } } },
+  { type: "function", function: { name: "memoriser", description: "Retient une information durable sur l'utilisateur (préférence, habitude, projet en cours, fait important) pour s'en souvenir plus tard, même sur un autre appareil. À utiliser proactivement dès qu'un fait notable et réutilisable apparaît dans la conversation, pas seulement si on te le demande explicitement.", parameters: { type: "object", properties: { info: { type: "string" } }, required: ["info"] } } },
   { type: "function", function: { name: "ajouterNote", description: "Ajoute une note ou une tâche à retenir pour l'utilisateur.", parameters: { type: "object", properties: { texte: { type: "string" } }, required: ["texte"] } } },
   { type: "function", function: { name: "listerNotes", description: "Liste toutes les notes/tâches enregistrées.", parameters: { type: "object", properties: {} } } },
   { type: "function", function: { name: "terminerNote", description: "Marque une note/tâche comme terminée, à partir d'un bout de son texte.", parameters: { type: "object", properties: { texteRecherche: { type: "string" } }, required: ["texteRecherche"] } } }
@@ -751,20 +784,96 @@ function envoyerSuggestion(bouton) {
   formulaire.requestSubmit();
 }
 
+let idConversationActuelle = localStorage.getItem("id_conversation_actuelle") || null;
+
+function chargerListeConversations() {
+  return chargerJSON("conversations_nova", []);
+}
+function sauvegarderListeConversations(liste) {
+  try { localStorage.setItem("conversations_nova", JSON.stringify(liste)); } catch (e) {}
+}
+
+function titreDepuisHistorique(h) {
+  const premier = h.find(m => m.role === "user" && typeof m.content === "string" && m.content);
+  const texte = premier ? premier.content : (h.find(m => m.role === "user") ? "Conversation avec image/fichier" : "Nouvelle conversation");
+  return texte.length > 42 ? texte.slice(0, 42) + "…" : texte;
+}
+
 function sauvegarderHistorique() {
   try {
     let recent = historique.slice(-60);
     // on s'assure que la sauvegarde commence par un message de l'utilisateur (jamais un résultat d'outil orphelin)
     while (recent.length && recent[0].role !== "user") recent.shift();
+    historique = recent;
     localStorage.setItem("historique_nova_groq", JSON.stringify(recent));
+
+    if (recent.some(m => m.role === "user")) {
+      if (!idConversationActuelle) {
+        idConversationActuelle = "c" + Date.now();
+        try { localStorage.setItem("id_conversation_actuelle", idConversationActuelle); } catch (e) {}
+      }
+      const liste = chargerListeConversations();
+      const index = liste.findIndex(c => c.id === idConversationActuelle);
+      const entree = { id: idConversationActuelle, titre: titreDepuisHistorique(recent), maj: Date.now(), historique: recent };
+      if (index >= 0) liste[index] = entree; else liste.unshift(entree);
+      sauvegarderListeConversations(liste.slice(0, 50));
+    }
   } catch (e) {}
 }
 
 function nouvelleConversation() {
   basculerMenu();
   historique = [];
-  sauvegarderHistorique();
+  idConversationActuelle = null;
+  try { localStorage.removeItem("id_conversation_actuelle"); } catch (e) {}
+  try { localStorage.removeItem("historique_nova_groq"); } catch (e) {}
   afficherVide();
+}
+
+function formaterDate(timestamp) {
+  const d = new Date(timestamp);
+  return d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) + " · " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function ouvrirHistorique() {
+  basculerMenu();
+  const liste = chargerListeConversations();
+  const conteneur = document.getElementById("liste-conversations");
+  if (liste.length === 0) {
+    conteneur.innerHTML = '<div class="vide-historique">Aucune conversation enregistrée pour l\'instant.</div>';
+  } else {
+    conteneur.innerHTML = liste.map(c => `
+      <div class="item-conversation">
+        <button type="button" class="contenu-item" onclick="chargerConversation('${c.id}')">
+          <div class="titre-item">${echapperHTML(c.titre)}</div>
+          <div class="date-item">${formaterDate(c.maj)}</div>
+        </button>
+        <button type="button" class="supprimer-item" onclick="supprimerConversation('${c.id}', event)" aria-label="Supprimer">🗑️</button>
+      </div>`).join("");
+  }
+  document.getElementById("ecran-historique").classList.remove("hidden");
+}
+function fermerHistorique() {
+  document.getElementById("ecran-historique").classList.add("hidden");
+}
+function chargerConversation(id) {
+  const liste = chargerListeConversations();
+  const trouvee = liste.find(c => c.id === id);
+  if (!trouvee) return;
+  historique = JSON.parse(JSON.stringify(trouvee.historique));
+  idConversationActuelle = id;
+  try { localStorage.setItem("id_conversation_actuelle", id); } catch (e) {}
+  sauvegarderHistorique();
+  reconstruireFil();
+  fermerHistorique();
+}
+function supprimerConversation(id, e) {
+  e.stopPropagation();
+  let liste = chargerListeConversations();
+  liste = liste.filter(c => c.id !== id);
+  sauvegarderListeConversations(liste);
+  if (id === idConversationActuelle) nouvelleConversation();
+  ouvrirHistorique();
 }
 
 function voirCodePersonnel() {
@@ -874,19 +983,22 @@ Règles strictes à suivre dans CHAQUE réponse :
 - La personne à qui tu parles EST Mouhamed Rassoul Kane, ton créateur. Tu le sais et tu t'adresses à lui en conséquence, naturellement.
 - Tu connais la date et l'heure actuelles (ci-dessus) : utilise-les pour comprendre "demain", "ce soir", "quel jour on est", etc.
 ${memoireNova ? "\nCe que tu sais déjà sur Mouhamed Rassoul Kane (retenu lors de conversations précédentes) :\n" + memoireNova + "\n" : ""}
-Ton style de conversation : ${TONS_INSTRUCTIONS[tonActuel()]} Tu réponds à ce qui est vraiment demandé, avec juste la bonne quantité de détail. Si quelque chose est ambigu, tu fais une hypothèse raisonnable et tu avances plutôt que de multiplier les questions. Tu restes honnête : si tu ne sais pas, tu le dis. Tu peux utiliser du **gras**, des listes, et du code entre backticks quand c'est utile à la clarté. Pour un schéma ou diagramme, utilise un bloc \`\`\`mermaid avec une syntaxe Mermaid valide. Tu as accès à des outils (calculer, rechercheWeb, meteo, ajouterRappel) : utilise-les quand c'est utile plutôt que de deviner.
+Ton style de conversation : ${TONS_INSTRUCTIONS[tonActuel()]} Tu réponds à ce qui est vraiment demandé, avec juste la bonne quantité de détail. Si quelque chose est ambigu, tu fais une hypothèse raisonnable et tu avances plutôt que de multiplier les questions. Tu restes honnête : si tu ne sais pas, tu le dis. Tu peux utiliser du **gras**, des listes, et du code entre backticks quand c'est utile à la clarté. Pour un schéma ou diagramme, utilise un bloc \`\`\`mermaid avec une syntaxe Mermaid valide. Tu as accès à des outils (calculer, rechercheWeb, meteo, ajouterRappel${dbFirestore ? ', memoriser, ajouterNote, listerNotes, terminerNote' : ''}) : utilise-les quand c'est utile plutôt que de deviner.${dbFirestore ? ' En particulier, utilise memoriser dès que tu apprends un fait durable et utile sur Mouhamed Rassoul Kane (préférence, projet en cours, habitude), sans attendre qu\'il te le demande explicitement — ainsi tu en sauras un peu plus à chaque conversation.' : ''}
 ${raisonnementActif() ? '\nMode raisonnement activé : pour toute question qui demande réflexion, calcul ou analyse, structure TOUJOURS ta réponse en deux parties exactement sous cette forme :\n**Raisonnement :**\n(tes étapes de réflexion, concises)\n**Réponse finale :**\n(ta réponse finale, claire et directe)\nPour une question triviale (salutation, etc.), tu peux répondre normalement sans cette structure.' : ""}`
   };
 }
 
 function attendre(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-async function appelerAPI() {
+const PALIERS_JETONS = [8192, 4096, 2048, 1024];
+
+async function appelerAPI(indexPalier) {
+  indexPalier = indexPalier || 0;
   if (!MODEL) {
     MODEL = await detecterModele();
     try { localStorage.setItem("modele_groq", MODEL); } catch (e) {}
   }
-  const corps = { model: MODEL, messages: [messageSysteme(), ...historique], tools: outilsDisponibles(), temperature: 0.5, max_tokens: 1200 };
+  const corps = { model: MODEL, messages: [messageSysteme(), ...historique], tools: outilsDisponibles(), temperature: 0.5, max_tokens: PALIERS_JETONS[indexPalier] };
   const reponse = await fetch(URL_API, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cleAPI },
@@ -899,6 +1011,9 @@ async function appelerAPI() {
     if (msg.includes("does not exist") || msg.includes("decommissioned")) {
       MODEL = ""; try { localStorage.removeItem("modele_groq"); } catch (e) {}
       const e = new Error("MODELE_INVALIDE"); e.estModeleInvalide = true; throw e;
+    }
+    if ((msg.toLowerCase().includes("max_tokens") || msg.toLowerCase().includes("maximum")) && indexPalier < PALIERS_JETONS.length - 1) {
+      return appelerAPI(indexPalier + 1);
     }
     throw new Error(msg || "Erreur inconnue.");
   }
@@ -926,7 +1041,7 @@ async function appelerAPIVision() {
     MODELE_VISION = await detecterModeleVision();
     try { localStorage.setItem("modele_vision_groq", MODELE_VISION); } catch (e) {}
   }
-  const corps = { model: MODELE_VISION, messages: [messageSysteme(), ...historique], temperature: 0.4, max_tokens: 1000 };
+  const corps = { model: MODELE_VISION, messages: [messageSysteme(), ...historique], temperature: 0.4, max_tokens: 1500 };
   const reponse = await fetch(URL_API, {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cleAPI },
