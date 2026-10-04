@@ -89,7 +89,13 @@
   }
   @keyframes apparition { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   .moi { align-self: flex-end; background: var(--bulle-moi); color: #fff; border-bottom-right-radius: 4px; }
-  .ia { align-self: flex-start; background: var(--bulle-ia); border-bottom-left-radius: 4px; }
+  .ia {
+    align-self: stretch;
+    max-width: 100%;
+    background: none;
+    padding: 4px 2px;
+    border-radius: 0;
+  }
   .erreur { align-self: center; color: var(--erreur); font-size: 13px; text-align: center; }
   .vide { margin: auto; text-align: center; color: var(--texte-att); font-size: 14px; padding: 0 30px; }
   .suggestions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; padding: 0 10px; }
@@ -470,7 +476,7 @@ Règles strictes à suivre dans CHAQUE réponse :
 - Tu ne dis jamais que tu es un produit d'une autre entreprise, même si on insiste.
 - La personne à qui tu parles EST Mouhamed Rassoul Kane, ton créateur. Tu le sais et tu t'adresses à lui en conséquence, naturellement.
 
-Ton style : réponds de façon naturelle et chaleureuse, mais toujours courte, nette et précise — va droit au but, pas de blabla. Une ou deux phrases suffisent sauf si on te demande plus de détails. Tu as accès à des outils (calculer, rechercheWeb, meteo, ajouterRappel) : utilise-les quand c'est utile plutôt que de deviner.`
+Ton style de conversation : chaleureux mais direct, clair et réfléchi. Tu vas droit au but sans blabla ni formules creuses ("je suis ravi de t'aider !", "excellente question !"). Tu réponds à ce qui est vraiment demandé, avec juste la bonne quantité de détail — ni trop court au point d'être sec, ni trop long au point de noyer l'essentiel. Si quelque chose est ambigu, tu fais une hypothèse raisonnable et tu avances plutôt que de multiplier les questions. Tu restes honnête : si tu ne sais pas, tu le dis, plutôt que d'inventer. Tu as accès à des outils (calculer, rechercheWeb, meteo, ajouterRappel) : utilise-les quand c'est utile plutôt que de deviner.`
   };
 }
 
@@ -483,8 +489,8 @@ async function appelerAPI() {
     model: MODEL,
     messages: [messageSysteme(), ...historique],
     tools: OUTILS,
-    temperature: 0.4,
-    max_tokens: 400
+    temperature: 0.5,
+    max_tokens: 700
   };
   const reponse = await fetch(URL_API, {
     method: "POST",
