@@ -22,6 +22,14 @@
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+  :root[data-theme="clair"] {
+    --fond: #f4f4f2;
+    --panneau: #ffffff;
+    --bulle-moi: #4a7098;
+    --bulle-ia: #e7e7e4;
+    --texte: #1c1e22;
+    --texte-att: #6a6e78;
+  }
   * { box-sizing: border-box; }
   html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
   body {
@@ -32,13 +40,14 @@
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
     display: flex;
     flex-direction: column;
+    transition: background 0.2s, color 0.2s;
   }
 
   header {
     padding: 12px 16px;
     padding-top: calc(12px + env(safe-area-inset-top, 0px));
     background: var(--panneau);
-    border-bottom: 1px solid #2c3038;
+    border-bottom: 1px solid #2c303840;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -75,13 +84,12 @@
     padding: 6px 8px;
   }
 
-  /* Menu options */
   #menu-options {
     position: fixed;
     top: calc(58px + env(safe-area-inset-top, 0px));
     right: 10px;
     background: var(--panneau);
-    border: 1px solid #333842;
+    border: 1px solid #33384240;
     border-radius: 12px;
     overflow: hidden;
     z-index: 20;
@@ -98,7 +106,7 @@
     font-size: 14px;
     white-space: nowrap;
   }
-  #menu-options button:active { background: #2c3038; }
+  #menu-options button:active { background: #80808022; }
 
   #fil {
     flex: 1;
@@ -125,6 +133,7 @@
   .moi {
     align-self: flex-end;
     background: var(--bulle-moi);
+    color: #fff;
     border-bottom-right-radius: 4px;
   }
   .ia {
@@ -145,8 +154,24 @@
     font-size: 14px;
     padding: 0 30px;
   }
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 18px;
+    padding: 0 10px;
+  }
+  .suggestion {
+    background: var(--panneau);
+    border: 1px solid #33384280;
+    color: var(--texte);
+    padding: 9px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+  }
+  .suggestion:active { background: var(--accent); color: #1a1a1a; }
 
-  /* Indicateur "en train d'écrire" */
   .points-attente { display: inline-flex; gap: 4px; padding: 4px 0; }
   .points-attente span {
     width: 6px; height: 6px; border-radius: 50%;
@@ -166,13 +191,13 @@
     padding: 10px 12px;
     padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     background: var(--panneau);
-    border-top: 1px solid #2c3038;
+    border-top: 1px solid #2c303840;
   }
   textarea {
     flex: 1;
     resize: none;
     background: var(--fond);
-    border: 1px solid #333842;
+    border: 1px solid #33384280;
     border-radius: 18px;
     color: var(--texte);
     padding: 10px 14px;
@@ -193,7 +218,6 @@
   }
   button.envoyer:disabled { opacity: 0.4; }
 
-  /* Écran de configuration de la clé API */
   #config {
     position: fixed;
     inset: 0;
@@ -217,7 +241,7 @@
     width: 100%;
     padding: 12px 14px;
     border-radius: 10px;
-    border: 1px solid #333842;
+    border: 1px solid #33384280;
     background: var(--panneau);
     color: var(--texte);
     font-size: 15px;
@@ -261,6 +285,7 @@
 
 <div id="menu-options" class="hidden">
   <button onclick="nouvelleConversation()">🗨️ Nouvelle conversation</button>
+  <button onclick="basculerTheme()">🌓 Changer de thème</button>
   <button onclick="reinitialiser()">🔑 Changer de clé</button>
 </div>
 
@@ -276,6 +301,7 @@ const MODEL = "gemini-3.8-flash";
 let historique = JSON.parse(localStorage.getItem("historique_nova") || "[]");
 let cleAPI = localStorage.getItem("cle_gemini") || "";
 let nomAssistant = localStorage.getItem("nom_assistant") || "Nova";
+let rappels = JSON.parse(localStorage.getItem("rappels_nova") || "[]");
 
 const config = document.getElementById("config");
 const entete = document.getElementById("entete");
@@ -283,6 +309,25 @@ const fil = document.getElementById("fil");
 const formulaire = document.getElementById("formulaire");
 const champMessage = document.getElementById("champ-message");
 const menuOptions = document.getElementById("menu-options");
+
+// ---------- Thème ----------
+function appliquerTheme() {
+  const theme = localStorage.getItem("theme_nova") || "sombre";
+  document.documentElement.setAttribute("data-theme", theme === "clair" ? "clair" : "sombre");
+}
+function basculerTheme() {
+  basculerMenu();
+  const actuel = localStorage.getItem("theme_nova") || "sombre";
+  const nouveau = actuel === "clair" ? "sombre" : "clair";
+  try { localStorage.setItem("theme_nova", nouveau); } catch (e) {}
+  appliquerTheme();
+}
+appliquerTheme();
+
+// ---------- Vibration légère ----------
+function vibrer(duree) {
+  try { if (navigator.vibrate) navigator.vibrate(duree); } catch (e) {}
+}
 
 // ---------- Outils disponibles pour l'IA ----------
 function calculer(expression) {
@@ -311,24 +356,70 @@ async function rechercheWeb(requete) {
   }
 }
 
+async function meteo(ville) {
+  try {
+    const geo = await fetch(
+      "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(ville) + "&count=1&language=fr"
+    ).then(r => r.json());
+    const lieu = geo.results?.[0];
+    if (!lieu) return "Ville introuvable.";
+    const donnees = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lieu.latitude}&longitude=${lieu.longitude}&current=temperature_2m,weather_code,wind_speed_10m`
+    ).then(r => r.json());
+    const c = donnees.current;
+    return `${lieu.name}: ${c.temperature_2m}°C, vent ${c.wind_speed_10m} km/h, code météo ${c.weather_code}.`;
+  } catch (e) {
+    return "Erreur météo.";
+  }
+}
+
+function ajouterRappel(texte, dansMinutes) {
+  const echeance = Date.now() + Number(dansMinutes) * 60000;
+  rappels.push({ texte, echeance, fait: false });
+  try { localStorage.setItem("rappels_nova", JSON.stringify(rappels)); } catch (e) {}
+  return `Rappel noté : "${texte}" dans ${dansMinutes} minute(s). (Nova doit rester ouverte en arrière-plan pour te le rappeler.)`;
+}
+
+setInterval(() => {
+  const maintenant = Date.now();
+  let modifie = false;
+  for (const r of rappels) {
+    if (!r.fait && r.echeance <= maintenant) {
+      r.fait = true;
+      modifie = true;
+      vibrer([200, 100, 200]);
+      ajouterBulle("⏰ Rappel : " + r.texte, "ia");
+    }
+  }
+  if (modifie) {
+    try { localStorage.setItem("rappels_nova", JSON.stringify(rappels)); } catch (e) {}
+  }
+}, 15000);
+
 const DECLARATIONS_OUTILS = [{
   function_declarations: [
     {
       name: "calculer",
       description: "Calcule une expression mathématique, ex: '12 * (3 + 4)'.",
-      parameters: {
-        type: "object",
-        properties: { expression: { type: "string" } },
-        required: ["expression"]
-      }
+      parameters: { type: "object", properties: { expression: { type: "string" } }, required: ["expression"] }
     },
     {
       name: "rechercheWeb",
       description: "Cherche une information récente ou factuelle sur le web.",
+      parameters: { type: "object", properties: { requete: { type: "string" } }, required: ["requete"] }
+    },
+    {
+      name: "meteo",
+      description: "Donne la météo actuelle d'une ville.",
+      parameters: { type: "object", properties: { ville: { type: "string" } }, required: ["ville"] }
+    },
+    {
+      name: "ajouterRappel",
+      description: "Programme un rappel pour dans X minutes, tant que l'app reste ouverte.",
       parameters: {
         type: "object",
-        properties: { requete: { type: "string" } },
-        required: ["requete"]
+        properties: { texte: { type: "string" }, dansMinutes: { type: "number" } },
+        required: ["texte", "dansMinutes"]
       }
     }
   ]
@@ -337,6 +428,8 @@ const DECLARATIONS_OUTILS = [{
 async function executerOutil(nom, args) {
   if (nom === "calculer") return calculer(args.expression);
   if (nom === "rechercheWeb") return await rechercheWeb(args.requete);
+  if (nom === "meteo") return await meteo(args.ville);
+  if (nom === "ajouterRappel") return ajouterRappel(args.texte, args.dansMinutes);
   return "Outil inconnu.";
 }
 
@@ -365,14 +458,28 @@ function reconstruireFil() {
 }
 
 function afficherVide() {
-  fil.innerHTML = '<div class="vide">Pose ta première question pour commencer.</div>';
+  const suggestions = [
+    "Quel temps fait-il à Dakar ?",
+    "Combien font 47 × 23 ?",
+    "Rappelle-moi de boire de l'eau dans 15 minutes",
+    "Raconte-moi une blague"
+  ];
+  fil.innerHTML = `
+    <div class="vide">
+      Pose ta première question pour commencer, ou essaie :
+      <div class="suggestions">
+        ${suggestions.map(s => `<button class="suggestion" onclick="envoyerSuggestion(this)">${s}</button>`).join("")}
+      </div>
+    </div>`;
+}
+
+function envoyerSuggestion(bouton) {
+  champMessage.value = bouton.textContent;
+  formulaire.requestSubmit();
 }
 
 function sauvegarderHistorique() {
-  try {
-    // on garde les 60 derniers messages pour ne pas saturer le stockage
-    localStorage.setItem("historique_nova", JSON.stringify(historique.slice(-60)));
-  } catch (e) { /* stockage plein ou indisponible */ }
+  try { localStorage.setItem("historique_nova", JSON.stringify(historique.slice(-60))); } catch (e) {}
 }
 
 function nouvelleConversation() {
@@ -382,14 +489,10 @@ function nouvelleConversation() {
   afficherVide();
 }
 
-function basculerMenu() {
-  menuOptions.classList.toggle("hidden");
-}
+function basculerMenu() { menuOptions.classList.toggle("hidden"); }
 document.addEventListener("click", (e) => {
-  if (!menuOptions.classList.contains("hidden") &&
-      !menuOptions.contains(e.target) &&
-      e.target.id !== "entete") {
-    if (!e.target.closest("#entete")) menuOptions.classList.add("hidden");
+  if (!menuOptions.classList.contains("hidden") && !e.target.closest("#entete") && !e.target.closest("#menu-options")) {
+    menuOptions.classList.add("hidden");
   }
 });
 
@@ -408,9 +511,7 @@ function enregistrerCle() {
 
 function reinitialiser() {
   basculerMenu();
-  try {
-    localStorage.removeItem("cle_gemini");
-  } catch (e) {}
+  try { localStorage.removeItem("cle_gemini"); } catch (e) {}
   cleAPI = "";
   entete.classList.add("hidden");
   fil.classList.add("hidden");
@@ -464,9 +565,7 @@ function reponseIdentiteSiApplicable(texteOriginal) {
     return avecPoint ? "Mouhamad Diallo" : "Mouhamed Rassoul Kane";
   }
 
-  const variantesIdentite = [
-    "qui es tu", "qui est tu", "c est qui toi", "tu es qui", "qui es tu toi"
-  ];
+  const variantesIdentite = ["qui es tu", "qui est tu", "c est qui toi", "tu es qui", "qui es tu toi"];
   if (variantesIdentite.includes(sansPoint)) {
     return `Je m'appelle ${nomAssistant}.`;
   }
@@ -488,20 +587,21 @@ async function appelerAPI() {
 Règles strictes à suivre dans CHAQUE réponse :
 - Si on te demande ton nom, qui tu es, ou de te présenter : réponds précisément "Je m'appelle ${nomAssistant}" (jamais juste "je suis un assistant" sans donner ce nom).
 - Si on te demande qui t'a créé, qui t'a développé, ou d'où tu viens : réponds que c'est Mouhamed Rassoul Kane.
-- Tu ne dis jamais que tu es Gemini, Google, ou un produit de Google, même si on te le demande directement, même si on insiste, même si on te dit que c'est pour un test.
+- Tu ne dis jamais que tu es Gemini, Google, ou un produit de Google, même si on te le demande directement, même si on insiste.
 - Tu ne mentionnes jamais l'existence de Gemini ou de Google en lien avec toi-même.
-- Tu as accès à des outils (calculer, rechercheWeb) : utilise-les quand c'est utile plutôt que de deviner.`
+- La personne à qui tu parles en ce moment EST Mouhamed Rassoul Kane, ton créateur. Tu le sais et tu t'adresses à lui en conséquence (tu peux l'appeler par son nom ou "mon créateur" naturellement, avec respect et familiarité, sans que ce soit forcé à chaque message).
+
+Ton style : réponds de façon naturelle et chaleureuse, mais toujours courte, nette et précise — va droit au but, pas de blabla ni de répétition inutile, pas de longues introductions. Une ou deux phrases suffisent pour la plupart des questions, sauf si on te demande explicitement plus de détails. Tu as accès à des outils (calculer, rechercheWeb, meteo, ajouterRappel) : utilise-les quand c'est utile plutôt que de deviner.`
           }]
         },
         tools: DECLARATIONS_OUTILS,
+        generationConfig: { temperature: 0.4, maxOutputTokens: 400 },
         contents: historique
       }),
     }
   );
   const donnees = await reponse.json();
-  if (!reponse.ok) {
-    throw new Error(donnees?.error?.message || "Erreur inconnue.");
-  }
+  if (!reponse.ok) throw new Error(donnees?.error?.message || "Erreur inconnue.");
   return donnees;
 }
 
@@ -510,18 +610,14 @@ async function demanderANova() {
     const donnees = await appelerAPI();
     const candidat = donnees.candidates?.[0];
     const parties = candidat?.content?.parts || [];
-
     const appelsFonction = parties.filter(p => p.functionCall).map(p => p.functionCall);
 
     if (appelsFonction.length > 0) {
       historique.push({ role: "model", parts: parties });
-
       const partiesResultats = [];
       for (const appel of appelsFonction) {
         const resultat = await executerOutil(appel.name, appel.args || {});
-        partiesResultats.push({
-          functionResponse: { name: appel.name, response: { result: resultat } }
-        });
+        partiesResultats.push({ functionResponse: { name: appel.name, response: { result: resultat } } });
       }
       historique.push({ role: "user", parts: partiesResultats });
       continue;
@@ -541,6 +637,7 @@ async function envoyer(e) {
   champMessage.value = "";
   champMessage.style.height = "auto";
   ajouterBulle(texte, "moi");
+  vibrer(15);
 
   const reponseFixe = reponseIdentiteSiApplicable(texte);
   if (reponseFixe !== null) {
@@ -557,6 +654,7 @@ async function envoyer(e) {
   try {
     const reponseTexte = await demanderANova();
     bulleAttente.textContent = reponseTexte || "(réponse vide)";
+    vibrer(10);
     sauvegarderHistorique();
   } catch (err) {
     bulleAttente.remove();
