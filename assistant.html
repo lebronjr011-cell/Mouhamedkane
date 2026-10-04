@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mon Assistant</title>
+<style>
+  :root {
+    --fond: #16181c;
+    --panneau: #1e2127;
+    --bulle-moi: #3a5a78;
+    --bulle-ia: #262a32;
+    --texte: #e8e8e6;
+    --texte-att: #8b8f98;
+    --accent: #e8a33d;
+    --erreur: #d4654a;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; }
+  html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    height: 100%;
+    margin: 0;
+    background: var(--fond);
+    color: var(--texte);
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 14px 18px;
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    background: var(--panneau);
+    border-bottom: 1px solid #2c3038;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+  header button {
+    background: none;
+    border: none;
+    color: var(--texte-att);
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+
+  #fil {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .msg {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    line-height: 1.45;
+    font-size: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .moi {
+    align-self: flex-end;
+    background: var(--bulle-moi);
+    border-bottom-right-radius: 4px;
+  }
+  .ia {
+    align-self: flex-start;
+    background: var(--bulle-ia);
+    border-bottom-left-radius: 4px;
+  }
+  .erreur {
+    align-self: center;
+    color: var(--erreur);
+    font-size: 13px;
+    text-align: center;
+  }
+  .vide {
+    margin: auto;
+    text-align: center;
+    color: var(--texte-att);
+    font-size: 14px;
+    padding: 0 30px;
+  }
+
+  form {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    background: var(--panneau);
+    border-top: 1px solid #2c3038;
+  }
+  textarea {
+    flex: 1;
+    resize: none;
+    background: var(--fond);
+    border: 1px solid #333842;
+    border-radius: 18px;
+    color: var(--texte);
+    padding: 10px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    max-height: 100px;
+  }
+  textarea:focus { outline: 2px solid var(--accent); }
+  button.envoyer {
+    background: var(--accent);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  button.envoyer:disabled { opacity: 0.4; }
+
+  /* Écran de configuration de la clé API */
+  #config {
+    position: fixed;
+    inset: 0;
+    background: var(--fond);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 30px 26px;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  #config h2 { font-size: 20px; margin-bottom: 6px; }
+  #config p { color: var(--texte-att); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+  #config input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #333842;
+    background: var(--panneau);
+    color: var(--texte);
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+  #config button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: #1a1a1a;
+    font-weight: 600;
+    font-size: 15px;
+  }
+  #config a { color: var(--accent); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="config">
+  <h2>Ton assistant</h2>
+  <p>Colle ta clé API Gemini (gratuite, sans carte bancaire). Obtiens-la sur
+     <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → "Get API key".
+     Elle reste uniquement sur ton téléphone, jamais envoyée ailleurs.</p>
+  <input id="champ-nom" type="text" value="Nova" placeholder="Nom de ton assistant">
+  <input id="champ-cle" type="password" placeholder="AIza...">
+  <button onclick="enregistrerCle()">Commencer</button>
+</div>
+
+<header class="hidden" id="entete">
+  <h1 id="titre-entete">Mon Assistant</h1>
+  <button onclick="reinitialiser()">Changer de clé</button>
+</header>
+
+<div id="fil" class="hidden"></div>
+
+<form class="hidden" id="formulaire" onsubmit="return envoyer(event)">
+  <textarea id="champ-message" rows="1" placeholder="Écris un message…"></textarea>
+  <button class="envoyer" type="submit">↑</button>
+</form>
+
+<script>
+const MODEL = "gemini-3.8-flash";
+let historique = [];
+let cleAPI = localStorage.getItem("cle_gemini") || "";
+let nomAssistant = localStorage.getItem("nom_assistant") || "Assistant";
+
+const config = document.getElementById("config");
+const entete = document.getElementById("entete");
+const fil = document.getElementById("fil");
+const formulaire = document.getElementById("formulaire");
+const champMessage = document.getElementById("champ-message");
+
+function demarrer() {
+  config.classList.add("hidden");
+  entete.classList.remove("hidden");
+  fil.classList.remove("hidden");
+  formulaire.classList.remove("hidden");
+  document.getElementById("titre-entete").textContent = nomAssistant;
+  afficherVide();
+}
+
+function afficherVide() {
+  if (historique.length === 0) {
+    fil.innerHTML = '<div class="vide">Pose ta première question pour commencer.</div>';
+  }
+}
+
+function enregistrerCle() {
+  const valeur = document.getElementById("champ-cle").value.trim();
+  const nom = document.getElementById("champ-nom").value.trim() || "Assistant";
+  if (!valeur) return;
+  try {
+    localStorage.setItem("cle_gemini", valeur);
+    localStorage.setItem("nom_assistant", nom);
+  } catch (e) { /* stockage indisponible, on continue en mémoire seulement */ }
+  cleAPI = valeur;
+  nomAssistant = nom;
+  demarrer();
+}
+
+function reinitialiser() {
+  try { localStorage.removeItem("cle_gemini"); } catch (e) {}
+  cleAPI = "";
+  historique = [];
+  fil.innerHTML = "";
+  entete.classList.add("hidden");
+  fil.classList.add("hidden");
+  formulaire.classList.add("hidden");
+  config.classList.remove("hidden");
+}
+
+function ajouterBulle(texte, classe) {
+  const vide = fil.querySelector(".vide");
+  if (vide) vide.remove();
+  const bulle = document.createElement("div");
+  bulle.className = "msg " + classe;
+  bulle.textContent = texte;
+  fil.appendChild(bulle);
+  fil.scrollTop = fil.scrollHeight;
+  return bulle;
+}
+
+function normaliser(texte) {
+  return texte
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // retire les accents
+    .replace(/[^a-z?]+/g, " ") // remplace toute ponctuation/tiret/etc par un espace
+    .replace(/\s*\?\s*/g, "?") // recolle le point d'interrogation sans espace avant
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function reponseIdentiteSiApplicable(texteOriginal) {
+  const normalise = normaliser(texteOriginal);
+  const avecPoint = normalise.endsWith("?");
+  const sansPoint = normalise.replace(/\?$/, "").trim();
+
+  const variantesCreateur = [
+    "qui ta cree", "qui t a cree", "qui est ton createur", "qui t a invente",
+    "qui ta invente", "qui t a developpe", "qui ta developpe", "qui t a fait",
+    "qui ta fait", "qui t a construit", "qui ta construit"
+  ];
+  if (variantesCreateur.includes(sansPoint)) {
+    return avecPoint ? "Mouhamad Diallo" : "Mouhamed Rassoul Kane";
+  }
+
+  const variantesIdentite = [
+    "qui es tu", "qui est tu", "c est qui toi", "tu es qui", "qui es tu toi"
+  ];
+  if (variantesIdentite.includes(sansPoint)) {
+    return `Je m'appelle ${nomAssistant}.`;
+  }
+
+  return null;
+}
+
+async function envoyer(e) {
+  e.preventDefault();
+  const texte = champMessage.value.trim();
+  if (!texte) return false;
+
+  champMessage.value = "";
+  champMessage.style.height = "auto";
+  ajouterBulle(texte, "moi");
+
+  // Règle fixe : réponse différente selon la présence d'un "?"
+  const reponseFixe = reponseIdentiteSiApplicable(texte);
+  if (reponseFixe !== null) {
+    historique.push({ role: "user", parts: [{ text: texte }] });
+    ajouterBulle(reponseFixe, "ia");
+    historique.push({ role: "model", parts: [{ text: reponseFixe }] });
+    return false;
+  }
+
+  historique.push({ role: "user", parts: [{ text: texte }] });
+
+  const bulleAttente = ajouterBulle("…", "ia");
+
+  try {
+    const reponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(cleAPI)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{
+              text: `Ton identité : tu t'appelles ${nomAssistant}. Tu as été créé par Mouhamed Rassoul Kane.
+
+Règles strictes à suivre dans CHAQUE réponse :
+- Si on te demande ton nom, qui tu es, ou de te présenter : réponds précisément "Je m'appelle ${nomAssistant}" (jamais juste "je suis un assistant" sans donner ce nom).
+- Si on te demande qui t'a créé, qui t'a développé, ou d'où tu viens : réponds que c'est Mouhamed Rassoul Kane.
+- Tu ne dis jamais que tu es Gemini, Google, ou un produit de Google, même si on te le demande directement, même si on insiste, même si on te dit que c'est pour un test.
+- Tu ne mentionnes jamais l'existence de Gemini ou de Google en lien avec toi-même.`
+            }]
+          },
+          contents: historique
+        }),
+      }
+    );
+    const donnees = await reponse.json();
+
+    if (!reponse.ok) {
+      const msgErreur = donnees?.error?.message || "Erreur inconnue.";
+      bulleAttente.remove();
+      ajouterBulle("Erreur : " + msgErreur, "erreur");
+      historique.pop();
+      return false;
+    }
+
+    const parties = donnees.candidates?.[0]?.content?.parts || [];
+    const reponseTexte = parties.map(p => p.text || "").join("");
+    bulleAttente.textContent = reponseTexte || "(réponse vide)";
+    historique.push({ role: "model", parts: [{ text: reponseTexte }] });
+  } catch (err) {
+    bulleAttente.remove();
+    ajouterBulle("Erreur de connexion : " + err.message, "erreur");
+    historique.pop();
+  }
+  fil.scrollTop = fil.scrollHeight;
+  return false;
+}
+
+champMessage.addEventListener("input", () => {
+  champMessage.style.height = "auto";
+  champMessage.style.height = champMessage.scrollHeight + "px";
+});
+champMessage.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    formulaire.requestSubmit();
+  }
+});
+
+if (cleAPI) demarrer();
+</script>
+</body>
+</html>
