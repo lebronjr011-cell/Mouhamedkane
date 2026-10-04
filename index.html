@@ -179,8 +179,35 @@
 </form>
 
 <script>
-const MODEL = "llama-3.3-70b-versatile";
+let MODEL = localStorage.getItem("modele_groq") || "";
 const URL_API = "https://api.groq.com/openai/v1/chat/completions";
+const URL_MODELES = "https://api.groq.com/openai/v1/models";
+
+// Préférences de modèle, du meilleur au plus basique (on prend le premier disponible)
+const MODELES_PREFERES = [
+  "llama-3.3-70b-versatile",
+  "llama-3.1-70b-versatile",
+  "openai/gpt-oss-120b",
+  "openai/gpt-oss-20b",
+  "llama-3.1-8b-instant",
+  "mixtral-8x7b-32768"
+];
+const MOTS_EXCLUS = ["whisper", "tts", "guard", "moderation", "allam"];
+
+async function detecterModele() {
+  try {
+    const reponse = await fetch(URL_MODELES, { headers: { "Authorization": "Bearer " + cleAPI } });
+    const donnees = await reponse.json();
+    const idsDisponibles = (donnees.data || []).map(m => m.id);
+    for (const prefere of MODELES_PREFERES) {
+      if (idsDisponibles.includes(prefere)) return prefere;
+    }
+    const candidat = idsDisponibles.find(id => !MOTS_EXCLUS.some(mot => id.toLowerCase().includes(mot)));
+    return candidat || MODELES_PREFERES[0];
+  } catch (e) {
+    return MODELES_PREFERES[0];
+  }
+}
 
 let historique = JSON.parse(localStorage.getItem("historique_nova_groq") || "[]"); // format OpenAI: {role, content, ...}
 let cleAPI = localStorage.getItem("cle_groq") || "";
@@ -448,6 +475,10 @@ Ton style : réponds de façon naturelle et chaleureuse, mais toujours courte, n
 }
 
 async function appelerAPI() {
+  if (!MODEL) {
+    MODEL = await detecterModele();
+    try { localStorage.setItem("modele_groq", MODEL); } catch (e) {}
+  }
   const corps = {
     model: MODEL,
     messages: [messageSysteme(), ...historique],
@@ -463,7 +494,12 @@ async function appelerAPI() {
   const donnees = await reponse.json();
   if (!reponse.ok) {
     if (reponse.status === 429) { const e = new Error("QUOTA"); e.estQuota = true; throw e; }
-    throw new Error(donnees?.error?.message || "Erreur inconnue.");
+    const msg = donnees?.error?.message || "";
+    if (msg.includes("does not exist") || msg.includes("decommissioned")) {
+      MODEL = ""; try { localStorage.removeItem("modele_groq"); } catch (e) {}
+      const e = new Error("MODELE_INVALIDE"); e.estModeleInvalide = true; throw e;
+    }
+    throw new Error(msg || "Erreur inconnue.");
   }
   return donnees;
 }
@@ -473,6 +509,9 @@ function attendre(ms) { return new Promise(r => setTimeout(r, ms)); }
 async function appelerAPIAvecRetry() {
   try { return await appelerAPI(); }
   catch (err) {
+    if (err.estModeleInvalide) {
+      return await appelerAPI(); // redétecte un modèle valide et réessaie
+    }
     if (err.estQuota) {
       await attendre(4000);
       try { return await appelerAPI(); }
