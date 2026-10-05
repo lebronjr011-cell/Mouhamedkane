@@ -13,17 +13,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --fond: #11131a;
-    --panneau: #191c25;
-    --bulle-moi: #39507a;
-    --bulle-ia: #232733;
-    --texte: #eceaf0;
-    --texte-att: #8d90a3;
-    --accent: #f0a944;
-    --accent-eclat: #ffd98a;
-    --erreur: #e0725a;
-    --code-fond: #0c0e14;
-    --bordure: #2c3040;
+    --fond: #0c0708;
+    --panneau: #170f10;
+    --bulle-moi: #5a1b1f;
+    --bulle-ia: #1c1314;
+    --texte: #f0e8e8;
+    --texte-att: #9c8688;
+    --accent: #c81e2c;
+    --accent-eclat: #ff4c4c;
+    --erreur: #ff6b5e;
+    --code-fond: #0a0506;
+    --bordure: #35191b;
     --police-titre: 'Space Grotesk', -apple-system, sans-serif;
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
@@ -42,20 +42,44 @@
   * { box-sizing: border-box; }
   html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); }
   body {
-    height: 100%; margin: 0; color: var(--texte);
+    height: 100%; margin: 0; color: var(--texte); background-color: var(--fond);
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
     display: flex; flex-direction: column; transition: background 0.2s, color 0.2s;
-    background-color: var(--fond);
-    background-image:
-      radial-gradient(1.5px 1.5px at 15% 12%, color-mix(in srgb, var(--accent) 55%, transparent), transparent),
-      radial-gradient(1px 1px at 68% 8%, color-mix(in srgb, var(--accent) 40%, transparent), transparent),
-      radial-gradient(1px 1px at 85% 22%, color-mix(in srgb, var(--accent) 35%, transparent), transparent),
-      radial-gradient(1.5px 1.5px at 40% 5%, color-mix(in srgb, var(--accent) 30%, transparent), transparent),
-      radial-gradient(1px 1px at 92% 15%, color-mix(in srgb, var(--accent) 45%, transparent), transparent);
-    background-repeat: no-repeat;
-    background-attachment: fixed;
+    position: relative;
   }
-  :root[data-theme="clair"] body { background-image: none; }
+
+  #fond-etoiles {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 38%, #2a0608 0%, var(--fond) 62%);
+  }
+  :root[data-theme="clair"] #fond-etoiles { display: none; }
+  .halo-sharingan {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 72vmin; height: 72vmin; border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    box-shadow:
+      0 0 60px 10px color-mix(in srgb, var(--accent) 18%, transparent) inset,
+      0 0 90px 20px color-mix(in srgb, var(--accent) 10%, transparent);
+    animation: pulsation-halo 5s infinite ease-in-out;
+  }
+  .halo-sharingan::before {
+    content: ""; position: absolute; inset: 14%; border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  }
+  @keyframes pulsation-halo {
+    0%, 100% { opacity: 0.55; filter: brightness(0.9); }
+    50% { opacity: 0.9; filter: brightness(1.15); }
+  }
+  .etoile {
+    position: absolute; border-radius: 50%; background: var(--accent-eclat);
+    animation: scintillement-etoile linear infinite;
+  }
+  @keyframes scintillement-etoile {
+    0%, 100% { opacity: var(--eclat-min); }
+    50% { opacity: var(--eclat-max); }
+  }
+
+  header, #fil, #zone-apercu, form, #config, #menu-options, #ecran-historique { position: relative; z-index: 1; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
   }
@@ -67,7 +91,7 @@
     display: flex; align-items: center; gap: 12px;
   }
   .avatar {
-    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; position: relative;
     background: radial-gradient(circle at 32% 28%, var(--accent-eclat), var(--accent) 65%);
     color: #1a1308;
     display: flex; align-items: center; justify-content: center;
@@ -75,8 +99,20 @@
     box-shadow: 0 0 0 1px var(--bordure), 0 2px 10px -2px color-mix(in srgb, var(--accent) 55%, transparent);
     transition: box-shadow 0.3s;
   }
+  .avatar .monogramme { font-size: 10.5px; }
+  #config .avatar-grand .monogramme { font-size: 17px; }
   .avatar.reflechit {
     animation: pulsation-avatar 1.6s infinite ease-in-out;
+  }
+  .avatar::after {
+    content: ""; position: absolute; inset: -3px; border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--accent-eclat) 55%, transparent);
+    pointer-events: none;
+  }
+  .monogramme {
+    font-family: var(--police-titre); font-weight: 700;
+    letter-spacing: -0.5px; color: #170a0a;
+    text-shadow: 0 1px 0 color-mix(in srgb, var(--accent-eclat) 40%, transparent);
   }
   @keyframes pulsation-avatar {
     0%, 100% { box-shadow: 0 0 0 1px var(--bordure), 0 2px 10px -2px color-mix(in srgb, var(--accent) 55%, transparent); }
@@ -262,8 +298,10 @@
 </head>
 <body>
 
+<div id="fond-etoiles"></div>
+
 <div id="config">
-  <div class="avatar-grand">N</div>
+  <div class="avatar-grand"><span class="monogramme">MRK</span></div>
   <h2>Ton assistant</h2>
   <p>Colle ta clé API <strong>Groq</strong> (gratuite, sans carte bancaire). Obtiens-la sur
      <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a> → "Create API Key".
@@ -280,7 +318,7 @@
 </div>
 
 <header class="hidden" id="entete">
-  <div class="avatar" id="avatar-entete">N</div>
+  <div class="avatar" id="avatar-entete"><span class="monogramme">MRK</span></div>
   <div class="entete-textes">
     <h1 id="titre-entete">Nova</h1>
     <div class="statut">En ligne</div>
@@ -364,6 +402,33 @@ function basculerTheme() {
   appliquerTheme();
 }
 appliquerTheme();
+
+function genererFondEtoile() {
+  const conteneur = document.getElementById("fond-etoiles");
+  if (!conteneur || conteneur.dataset.genere) return;
+  conteneur.dataset.genere = "1";
+  const largeur = window.innerWidth, hauteur = window.innerHeight;
+
+  const halo = document.createElement("div");
+  halo.className = "halo-sharingan";
+  conteneur.appendChild(halo);
+
+  for (let i = 0; i < 30; i++) {
+    const etincelle = document.createElement("div");
+    const taille = Math.random() < 0.2 ? 2 : 1;
+    etincelle.className = "etoile";
+    etincelle.style.left = Math.random() * largeur + "px";
+    etincelle.style.top = Math.random() * hauteur + "px";
+    etincelle.style.width = taille + "px";
+    etincelle.style.height = taille + "px";
+    etincelle.style.setProperty("--eclat-min", (0.1 + Math.random() * 0.15).toFixed(2));
+    etincelle.style.setProperty("--eclat-max", (0.5 + Math.random() * 0.3).toFixed(2));
+    etincelle.style.animationDuration = (2 + Math.random() * 4) + "s";
+    etincelle.style.animationDelay = (Math.random() * 4) + "s";
+    conteneur.appendChild(etincelle);
+  }
+}
+genererFondEtoile();
 
 try {
   if (window.mermaid) {
@@ -711,7 +776,6 @@ function demarrer() {
   fil.classList.remove("hidden");
   formulaire.classList.remove("hidden");
   document.getElementById("titre-entete").textContent = nomAssistant;
-  document.getElementById("avatar-entete").textContent = nomAssistant.charAt(0).toUpperCase();
   document.getElementById("bouton-ton").textContent = "💬 Ton : " + tonActuel();
   document.getElementById("bouton-raisonnement").textContent = "🧠 Raisonnement visible : " + (raisonnementActif() ? "On" : "Off");
   reconstruireFil();
